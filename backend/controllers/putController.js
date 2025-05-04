@@ -33,16 +33,15 @@ const updateNote = async (req, res) => {
     const { id } = req.params;
     const updateData = req.body;
     
-    const note = await Note.findById(id);
-    if (!note) {
-      return res.status(404).json({ message: 'Note not found' });
-    }
-    
     const updatedNote = await Note.findByIdAndUpdate(
       id, 
       updateData, 
       { new: true, runValidators: true }
     );
+    
+    if (!updatedNote) {
+      return res.status(404).json({ message: 'Note not found' });
+    }
     
     res.status(200).json(updatedNote);
   } catch (error) {
@@ -60,16 +59,15 @@ const updateSession = async (req, res) => {
     const { id } = req.params;
     const updateData = req.body;
     
-    const session = await Session.findById(id);
-    if (!session) {
-      return res.status(404).json({ message: 'Session not found' });
-    }
-    
     const updatedSession = await Session.findByIdAndUpdate(
       id, 
       updateData, 
       { new: true, runValidators: true }
     );
+    
+    if (!updatedSession) {
+      return res.status(404).json({ message: 'Session not found' });
+    }
     
     res.status(200).json(updatedSession);
   } catch (error) {
@@ -87,16 +85,15 @@ const updateVideo = async (req, res) => {
     const { id } = req.params;
     const updateData = req.body;
     
-    const video = await Video.findById(id);
-    if (!video) {
-      return res.status(404).json({ message: 'Video not found' });
-    }
-    
     const updatedVideo = await Video.findByIdAndUpdate(
       id, 
       updateData, 
       { new: true, runValidators: true }
     );
+    
+    if (!updatedVideo) {
+      return res.status(404).json({ message: 'Video not found' });
+    }
     
     res.status(200).json(updatedVideo);
   } catch (error) {
