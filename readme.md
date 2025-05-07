@@ -1,7 +1,7 @@
 # AI Study Buddy 📚🤖
 
 # Backend link
-[https://aistudybuddy.onrender.com
+[https://aistudybuddy.onrender.com] 
 
 ## 🔍 Project Overview
 AI Study Buddy is an AI-powered web app that helps users upload their study notes (PDF or Text), paste YouTube video links, and interact via Q&A or generate summaries—all powered by OpenAI. The app offers session tracking, secure login, file handling, and a sleek modern UI.
