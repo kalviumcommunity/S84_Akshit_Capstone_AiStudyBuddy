@@ -1,4 +1,4 @@
- const mongoose = require('mongoose');
+const mongoose = require('mongoose');
 
 const studySessionSchema = new mongoose.Schema({
   user: {
@@ -30,7 +30,7 @@ const studySessionSchema = new mongoose.Schema({
   content: [{
     type: {
       type: String,
-      enum: ['note', 'video'],
+      enum: ['Note', 'Video'],
       required: true
     },
     contentId: {

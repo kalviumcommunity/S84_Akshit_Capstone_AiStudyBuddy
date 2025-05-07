@@ -59,6 +59,8 @@ videoSchema.pre('save', function(next) {
     const videoIdMatch = this.youtubeUrl.match(/(?:youtube\.com\/(?:[^\/]+\/.+\/|(?:v|e(?:mbed)?)\/|.*[?&]v=)|youtu\.be\/)([^"&?\/\s]{11})/);
     if (videoIdMatch) {
       this.videoId = videoIdMatch[1];
+    } else {
+      return next(new Error('Invalid YouTube URL format'));
     }
   }
   next();
