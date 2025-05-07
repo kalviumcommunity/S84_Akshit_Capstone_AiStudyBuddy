@@ -10,6 +10,14 @@ const sessionRoutes = require('./routes/session');
 const postRoutes = require('./routes/postRoutes');
 const putRoutes = require('./routes/putRoutes');
 
+// Home route
+app.get('/', (req, res) => {
+  res.json({
+    message: 'Welcome to AI Study Buddy API',
+    backendUrl: 'https://aistudybuddy.onrender.com'
+  });
+});
+
 app.use('/api/sessions', sessionRoutes); // for GETs
 app.use('/api', postRoutes); // for POSTs
 app.use('/api', putRoutes); // for PUTs
