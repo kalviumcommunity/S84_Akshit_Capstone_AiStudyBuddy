@@ -15,7 +15,7 @@ app.use('/api', postRoutes); // for POSTs
 app.use('/api', putRoutes); // for PUTs
 
 // Error handling middleware
-app.use((err, req, res, next) => {
+app.use(( req, res) => {
   res.status(500).send('Something went wrong!');
 });
 
