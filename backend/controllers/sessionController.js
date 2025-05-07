@@ -3,17 +3,25 @@ const Session = require('../models/Session');
 const getAllSessions = async (req, res) => {
   try {
     const { userId, limit = 10, page = 1, sort = '-createdAt' } = req.query;
+
+    // Validate sort parameter
+    const allowedSortFields = ['createdAt', '-createdAt', 'title', '-title', 'date', '-date'];
+    const sortField = allowedSortFields.includes(sort) ? sort : '-createdAt';
+    
+    // Validate pagination parameters
+    const limitNum = Math.max(1, parseInt(limit) || 10);
+    const pageNum = Math.max(1, parseInt(page) || 1);
     
     // Build query
     const query = {};
     if (userId) query.userId = userId;
     
     // Calculate pagination
-    const skip = (parseInt(page) - 1) * parseInt(limit);
+    const skip = (pageNum - 1) * limitNum;
     
     const sessions = await Session.find(query)
-      .sort(sort)
-      .limit(parseInt(limit))
+      .sort(sortField)
+      .limit(limitNum)
       .skip(skip);
       
     const totalSessions = await Session.countDocuments(query);
@@ -22,8 +30,8 @@ const getAllSessions = async (req, res) => {
       sessions,
       pagination: {
         total: totalSessions,
-        page: parseInt(page),
-        pages: Math.ceil(totalSessions / parseInt(limit))
+        page: pageNum,
+        pages: Math.ceil(totalSessions / limitNum)
       }
     });
   } catch (err) {
@@ -62,14 +70,42 @@ const getSessionById = async (req, res) => {
 const getSessionsByUser = async (req, res) => {
   try {
     const { userId } = req.params;
+    const { limit = 10, page = 1, sort = '-createdAt' } = req.query;
     
     if (!userId) {
       return res.status(400).json({ error: 'User ID is required' });
     }
     
-    const sessions = await Session.find({ userId });
+    if (!userId.match(/^[0-9a-fA-F]{24}$/)) {
+      return res.status(400).json({ error: 'Invalid user ID format' });
+    }
     
-    res.status(200).json(sessions);
+    // Validate sort parameter
+    const allowedSortFields = ['createdAt', '-createdAt', 'title', '-title', 'date', '-date'];
+    const sortField = allowedSortFields.includes(sort) ? sort : '-createdAt';
+    
+    // Validate pagination parameters
+    const limitNum = Math.max(1, parseInt(limit) || 10);
+    const pageNum = Math.max(1, parseInt(page) || 1);
+    
+    // Calculate pagination
+    const skip = (pageNum - 1) * limitNum;
+    
+    const sessions = await Session.find({ userId })
+      .sort(sortField)
+      .limit(limitNum)
+      .skip(skip);
+      
+    const totalSessions = await Session.countDocuments({ userId });
+    
+    res.status(200).json({
+      sessions,
+      pagination: {
+        total: totalSessions,
+        page: pageNum,
+        pages: Math.ceil(totalSessions / limitNum)
+      }
+    });
   } catch (err) {
     console.error('Error fetching user sessions:', err);
     res.status(500).json({ 

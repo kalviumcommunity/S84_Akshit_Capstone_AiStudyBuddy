@@ -46,6 +46,15 @@ const createSession = async (req, res) => {
 
   try {
     const { userId, noteId, conversation } = req.body;
+    
+    if (!userId.match(/^[0-9a-fA-F]{24}$/)) {
+      return res.status(400).json({ message: 'Invalid user ID format' });
+    }
+    
+    if (!noteId.match(/^[0-9a-fA-F]{24}$/)) {
+      return res.status(400).json({ message: 'Invalid note ID format' });
+    }
+    
     const newSession = await Session.create({ userId, noteId, conversation });
     res.status(201).json(newSession);
   } catch (error) {
@@ -61,6 +70,11 @@ const createVideo = async (req, res) => {
 
   try {
     const { userId, youtubeUrl, summary } = req.body;
+    
+    if (!userId.match(/^[0-9a-fA-F]{24}$/)) {
+      return res.status(400).json({ message: 'Invalid user ID format' });
+    }
+    
     const newVideo = await Video.create({ userId, youtubeUrl, summary });
     res.status(201).json(newVideo);
   } catch (error) {

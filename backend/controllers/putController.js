@@ -33,9 +33,17 @@ const updateNote = async (req, res) => {
     const { id } = req.params;
     const updateData = req.body;
     
+    if (!id.match(/^[0-9a-fA-F]{24}$/)) {
+      return res.status(400).json({ message: 'Invalid note ID format' });
+    }
+    
+    // Extract only allowed fields from the request body
+    const { title, content, tags } = updateData;
+    const sanitizedData = { title, content, tags };
+    
     const updatedNote = await Note.findByIdAndUpdate(
       id, 
-      updateData, 
+      sanitizedData, 
       { new: true, runValidators: true }
     );
     
@@ -59,9 +67,17 @@ const updateSession = async (req, res) => {
     const { id } = req.params;
     const updateData = req.body;
     
+    if (!id.match(/^[0-9a-fA-F]{24}$/)) {
+      return res.status(400).json({ message: 'Invalid session ID format' });
+    }
+    
+    // Extract only allowed fields from the request body
+    const { title, date, duration, notes, conversation } = updateData;
+    const sanitizedData = { title, date, duration, notes, conversation };
+    
     const updatedSession = await Session.findByIdAndUpdate(
       id, 
-      updateData, 
+      sanitizedData, 
       { new: true, runValidators: true }
     );
     
@@ -85,9 +101,17 @@ const updateVideo = async (req, res) => {
     const { id } = req.params;
     const updateData = req.body;
     
+    if (!id.match(/^[0-9a-fA-F]{24}$/)) {
+      return res.status(400).json({ message: 'Invalid video ID format' });
+    }
+    
+    // Extract only allowed fields from the request body
+    const { title, youtubeUrl, summary, notes } = updateData;
+    const sanitizedData = { title, youtubeUrl, summary, notes };
+    
     const updatedVideo = await Video.findByIdAndUpdate(
       id, 
-      updateData, 
+      sanitizedData, 
       { new: true, runValidators: true }
     );
     
