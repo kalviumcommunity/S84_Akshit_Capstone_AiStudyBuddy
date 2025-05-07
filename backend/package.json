@@ -2,9 +2,10 @@
   "name": "s84_akshit_capstone_aistudybuddy",
   "version": "1.0.0",
   "description": "AI Study Buddy is an AI-powered web app that helps users upload their study notes (PDF or Text), paste YouTube video links, and interact via Q&A or generate summaries—all powered by OpenAI. The app offers session tracking, secure login, file handling, and a sleek modern UI.",
-  "main": "index.js",
+  "main": "server.js",
   "scripts": {
-    "test": "echo \"Error: no test specified\" && exit 1"
+    "test": "echo \"Error: no test specified\" && exit 1",
+    "start": "node server.js"
   },
   "keywords": [],
   "author": "",
