@@ -31,6 +31,12 @@ const createVideo = async (req, res) => {
     const { user, title, youtubeUrl, thumbnailUrl, channelTitle, duration, summary, tags } = req.body;
     
     // Extract video ID
+    if (!youtubeUrl) {
+      return res.status(400).json({
+        status: 'error',
+        message: 'YouTube URL is required'
+      });
+    }
     const videoIdMatch = youtubeUrl.match(/(?:youtube\.com\/(?:[^\/]+\/.+\/|(?:v|e(?:mbed)?)\/|.*[?&]v=)|youtu\.be\/)([^"&?\/\s]{11})/);
     if (!videoIdMatch) {
       return res.status(400).json({
