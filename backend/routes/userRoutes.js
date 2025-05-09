@@ -82,7 +82,7 @@ router.delete('/:id', authMiddleware, async (req, res) => {
     const { id } = req.params;
     
     // Ensure user can only delete their own account or has admin privileges
-    if (req.user.id !== id && req.user.role !== 'admin') {
+    if (req.user.id.toString() !== id.toString() && req.user.role !== 'admin') {
       return res.status(403).json({ message: 'Not authorized to delete this user' });
     }
     

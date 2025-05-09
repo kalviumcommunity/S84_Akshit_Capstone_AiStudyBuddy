@@ -96,12 +96,18 @@ const deleteSession = async (req, res) => {
       return res.status(400).json({ message: 'Invalid session ID format' });
     }
     
-    const deletedSession = await Session.findByIdAndDelete(id);
+    const session = await Session.findById(id);
     
-    if (!deletedSession) {
+    if (!session) {
       return res.status(404).json({ message: 'Session not found' });
     }
     
+    // Check if the session belongs to the authenticated user
+    if (session.user.toString() !== req.user.id) {
+      return res.status(403).json({ message: 'Not authorized to delete this session' });
+    }
+    
+    const deletedSession = await Session.findByIdAndDelete(id);
     res.status(200).json({ message: 'Session deleted successfully', deletedSession });
   } catch (error) {
     console.error('Error deleting session:', error);
