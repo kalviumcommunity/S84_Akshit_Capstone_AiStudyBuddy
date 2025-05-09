@@ -1,6 +1,6 @@
 const express = require('express');
 const router = express.Router();
-const { getAllNotes, getNoteById, getNotesByUser, createNote, validateNote } = require('../controllers/noteController');
+const { getAllNotes, getNoteById, getNotesByUser, createNote, validateNote, deleteNote } = require('../controllers/noteController');
 
 // GET /api/notes - Get all notes
 router.get('/', getAllNotes);
@@ -13,5 +13,8 @@ router.post('/', validateNote, createNote);
 
 // GET /api/notes/:id - Get a specific note by ID
 router.get('/:id', getNoteById);
+
+// DELETE /api/notes/:id - Delete a specific note by ID
+router.delete('/:id', deleteNote);
 
 module.exports = router; 

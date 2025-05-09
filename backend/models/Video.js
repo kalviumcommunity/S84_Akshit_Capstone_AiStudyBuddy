@@ -108,7 +108,7 @@ videoSchema.pre('save', function(next) {
       return next(new Error('Invalid YouTube URL format'));
     }
   }
-  next();
+  return next();
 });
 
 // Add indexes for better query performance
