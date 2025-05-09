@@ -32,6 +32,12 @@ const createVideo = async (req, res) => {
     
     // Extract video ID
     const videoIdMatch = youtubeUrl.match(/(?:youtube\.com\/(?:[^\/]+\/.+\/|(?:v|e(?:mbed)?)\/|.*[?&]v=)|youtu\.be\/)([^"&?\/\s]{11})/);
+    if (!videoIdMatch) {
+      return res.status(400).json({
+        status: 'error',
+        message: 'Invalid YouTube URL format'
+      });
+    }
     const videoId = videoIdMatch[1];
 
     // Create video document
