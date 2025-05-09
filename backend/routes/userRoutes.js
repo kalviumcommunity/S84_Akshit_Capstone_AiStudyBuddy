@@ -75,4 +75,36 @@ router.post('/register', async (req, res) => {
   }
 });
 
+// DELETE /api/users/:id - Delete a user
+router.delete('/:id', async (req, res) => {
+  try {
+    const { id } = req.params;
+    
+    if (!id.match(/^[0-9a-fA-F]{24}$/)) {
+      return res.status(400).json({ message: 'Invalid user ID format' });
+    }
+    
+    const deletedUser = await User.findByIdAndDelete(id);
+    
+    if (!deletedUser) {
+      return res.status(404).json({ message: 'User not found' });
+    }
+    
+    res.status(200).json({ 
+      message: 'User deleted successfully',
+      user: {
+        _id: deletedUser._id,
+        username: deletedUser.username,
+        email: deletedUser.email
+      }
+    });
+  } catch (error) {
+    console.error('Error deleting user:', error);
+    res.status(500).json({
+      error: 'Failed to delete user',
+      message: error.message
+    });
+  }
+});
+
 module.exports = router;

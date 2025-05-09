@@ -87,10 +87,36 @@ const createSession = async (req, res) => {
   }
 };
 
+// Delete a session
+const deleteSession = async (req, res) => {
+  try {
+    const { id } = req.params;
+    
+    if (!id.match(/^[0-9a-fA-F]{24}$/)) {
+      return res.status(400).json({ message: 'Invalid session ID format' });
+    }
+    
+    const deletedSession = await Session.findByIdAndDelete(id);
+    
+    if (!deletedSession) {
+      return res.status(404).json({ message: 'Session not found' });
+    }
+    
+    res.status(200).json({ message: 'Session deleted successfully', deletedSession });
+  } catch (error) {
+    console.error('Error deleting session:', error);
+    res.status(500).json({
+      error: 'Failed to delete session',
+      message: error.message
+    });
+  }
+};
+
 module.exports = {
   getAllSessions,
   getSessionById,
   getSessionsByUser,
   createSession,
-  validateSession
+  validateSession,
+  deleteSession
 };
