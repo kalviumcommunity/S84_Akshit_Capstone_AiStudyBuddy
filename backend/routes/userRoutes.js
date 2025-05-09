@@ -1,6 +1,7 @@
 const express = require('express');
 const router = express.Router();
 const User = require('../models/User');
+const authMiddleware = require('../middleware/auth');
 
 // GET /api/users - Get all users
 router.get('/', async (req, res) => {
@@ -76,9 +77,14 @@ router.post('/register', async (req, res) => {
 });
 
 // DELETE /api/users/:id - Delete a user
-router.delete('/:id', async (req, res) => {
+router.delete('/:id', authMiddleware, async (req, res) => {
   try {
     const { id } = req.params;
+    
+    // Ensure user can only delete their own account or has admin privileges
+    if (req.user.id !== id && req.user.role !== 'admin') {
+      return res.status(403).json({ message: 'Not authorized to delete this user' });
+    }
     
     if (!id.match(/^[0-9a-fA-F]{24}$/)) {
       return res.status(400).json({ message: 'Invalid user ID format' });
