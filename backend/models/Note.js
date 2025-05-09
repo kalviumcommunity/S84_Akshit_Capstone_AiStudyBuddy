@@ -48,6 +48,12 @@ const noteSchema = new mongoose.Schema({
   timestamps: true
 });
 
+// Add indexes for better query performance
+noteSchema.index({ user: 1, createdAt: -1 });
+noteSchema.index({ tags: 1 });
+noteSchema.index({ isPublic: 1 });
+noteSchema.index({ fileType: 1 });
+
 const Note = mongoose.model('Note', noteSchema);
 
 module.exports = Note;

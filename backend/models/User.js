@@ -31,6 +31,18 @@ const userSchema = new mongoose.Schema({
     type: String,
     default: ''
   },
+  videos: [{
+    type: mongoose.Schema.Types.ObjectId,
+    ref: 'Video'
+  }],
+  notes: [{
+    type: mongoose.Schema.Types.ObjectId,
+    ref: 'Note'
+  }],
+  sessions: [{
+    type: mongoose.Schema.Types.ObjectId,
+    ref: 'StudySession'
+  }],
   createdAt: {
     type: Date,
     default: Date.now
@@ -55,6 +67,11 @@ userSchema.pre('save', async function(next) {
 userSchema.methods.comparePassword = async function(candidatePassword) {
   return bcrypt.compare(candidatePassword, this.password);
 };
+
+// Add indexes for better query performance
+userSchema.index({ email: 1 });
+userSchema.index({ username: 1 });
+userSchema.index({ googleId: 1 });
 
 const User = mongoose.model('User', userSchema);
 
