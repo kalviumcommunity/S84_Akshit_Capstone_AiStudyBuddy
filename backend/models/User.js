@@ -19,7 +19,7 @@ const userSchema = new mongoose.Schema({
   password: {
     type: String,
     required: function() {
-      return !this.googleId; // Password required only if not using Google OAuth
+      return !this.googleId; // Password required only if not using Google OAuth 
     },
     minlength: 6
   },
