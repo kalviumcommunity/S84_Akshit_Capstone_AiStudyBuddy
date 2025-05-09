@@ -1,7 +1,6 @@
 const express = require('express');
 const router = express.Router();
 const { getAllSessions, getSessionById, getSessionsByUser, createSession, validateSession, deleteSession } = require('../controllers/sessionController');
-const authMiddleware = require('../middleware/auth');
 
 // GET /api/sessions - Get all sessions
 router.get('/', getAllSessions);
@@ -16,6 +15,6 @@ router.post('/', validateSession, createSession);
 router.get('/:id', getSessionById);
 
 // DELETE /api/sessions/:id - Delete a specific session by ID
-router.delete('/:id', authMiddleware, deleteSession);
+router.delete('/:id', deleteSession);
 
 module.exports = router;

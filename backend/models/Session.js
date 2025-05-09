@@ -62,6 +62,13 @@ studySessionSchema.pre('save', function(next) {
   next();
 });
 
+// Add indexes for better query performance
+studySessionSchema.index({ user: 1, createdAt: -1 });
+studySessionSchema.index({ status: 1 });
+studySessionSchema.index({ tags: 1 });
+studySessionSchema.index({ startTime: 1 });
+studySessionSchema.index({ 'content.contentId': 1 });
+
 const StudySession = mongoose.model('StudySession', studySessionSchema);
 
 module.exports = StudySession;

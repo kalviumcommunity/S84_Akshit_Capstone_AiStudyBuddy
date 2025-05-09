@@ -1,7 +1,6 @@
 const express = require('express');
 const router = express.Router();
 const User = require('../models/User');
-const authMiddleware = require('../middleware/auth');
 
 // GET /api/users - Get all users
 router.get('/', async (req, res) => {
@@ -77,7 +76,7 @@ router.post('/register', async (req, res) => {
 });
 
 // DELETE /api/users/:id - Delete a user
-router.delete('/:id', authMiddleware, async (req, res) => {
+router.delete('/:id',  async (req, res) => {
   try {
     const { id } = req.params;
     
