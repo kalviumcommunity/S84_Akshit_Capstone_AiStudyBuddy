@@ -1,9 +1,17 @@
 const express = require('express');
 const router = express.Router();
-const { getAllSessions, getSessionById, getSessionsByUser } = require('../controllers/sessionController');
+const { getAllSessions, getSessionById, getSessionsByUser, createSession, validateSession } = require('../controllers/sessionController');
 
+// GET /api/sessions - Get all sessions
 router.get('/', getAllSessions);
+
+// GET /api/sessions/user/:userId - Get sessions by user ID
 router.get('/user/:userId', getSessionsByUser);
+
+// POST /api/sessions - Create a new session
+router.post('/', validateSession, createSession);
+
+// GET /api/sessions/:id - Get a specific session by ID
 router.get('/:id', getSessionById);
 
 module.exports = router;
