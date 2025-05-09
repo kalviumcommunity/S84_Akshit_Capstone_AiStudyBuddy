@@ -1,12 +1,16 @@
 const express = require('express');
 const mongoose = require('mongoose');
+const dotenv = require('dotenv');
+
+// Load environment variables
+dotenv.config();
+
 const app = express();
 
 // MongoDB Connection
-mongoose.connect('mongodb://localhost:27017/aistudybuddy', {
-  useNewUrlParser: true,
-  useUnifiedTopology: true
-})
+const MONGO = process.env.MONGODB_URI;
+
+mongoose.connect(MONGO)
 .then(() => console.log('Connected to MongoDB'))
 .catch(err => console.error('Could not connect to MongoDB:', err));
 
@@ -16,7 +20,8 @@ app.use(express.urlencoded({ extended: true }));
 
 // Routes
 const sessionRoutes = require('./routes/session');
-const postRoutes = require('./routes/postRoutes');
+const noteRoutes = require('./routes/noteRoutes');
+const videoRoutes = require('./routes/videoRoutes');
 const putRoutes = require('./routes/putRoutes');
 const userRoutes = require('./routes/userRoutes');
 
@@ -28,10 +33,11 @@ app.get('/', (req, res) => {
   });
 });
 
-app.use('/api/sessions', sessionRoutes); // for GETs
-app.use('/api', postRoutes); // for POSTs
-app.use('/api', putRoutes); // for PUTs
-app.use('/api/users', userRoutes); // for user operations
+app.use('/api/sessions', sessionRoutes);
+app.use('/api/notes', noteRoutes);
+app.use('/api/videos', videoRoutes);
+app.use('/api', putRoutes);
+app.use('/api/users', userRoutes);
 
 // Error handling middleware
 app.use((err, req, res, next) => {

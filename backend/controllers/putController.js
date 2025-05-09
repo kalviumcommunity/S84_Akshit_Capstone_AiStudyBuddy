@@ -11,16 +11,25 @@ const validateNoteUpdate = [
 
 // Validation middleware for updating a session
 const validateSessionUpdate = [
-  body('userId').optional().notEmpty().withMessage('User ID cannot be empty'),
-  body('noteId').optional().notEmpty().withMessage('Note ID cannot be empty'),
-  body('conversation').optional().notEmpty().withMessage('Conversation cannot be empty'),
+  body('title').optional().notEmpty().withMessage('Title cannot be empty'),
+  body('description').optional(),
+  body('endTime').optional(),
+  body('status').optional().isIn(['active', 'completed', 'paused']).withMessage('Status must be active, completed, or paused'),
+  body('tags').optional().isArray().withMessage('Tags must be an array'),
+  body('content').optional().isArray().withMessage('Content must be an array'),
 ];
 
 // Validation middleware for updating a video
 const validateVideoUpdate = [
-  body('userId').optional().notEmpty().withMessage('User ID cannot be empty'),
+  body('title').optional().notEmpty().withMessage('Title cannot be empty'),
   body('youtubeUrl').optional().isURL().withMessage('Valid YouTube URL is required'),
   body('summary').optional().notEmpty().withMessage('Summary cannot be empty'),
+  body('thumbnailUrl').optional(),
+  body('channelTitle').optional(),
+  body('duration').optional(),
+  body('notes').optional().isArray().withMessage('Notes must be an array'),
+  body('tags').optional().isArray().withMessage('Tags must be an array'),
+  body('isPublic').optional().isBoolean().withMessage('isPublic must be a boolean')
 ];
 
 const updateNote = async (req, res) => {
@@ -72,8 +81,16 @@ const updateSession = async (req, res) => {
     }
     
     // Extract only allowed fields from the request body
-    const { title, date, duration, notes, conversation } = updateData;
-    const sanitizedData = { title, date, duration, notes, conversation };
+    const { title, description, endTime, status, tags, content, summary } = updateData;
+    const sanitizedData = {};
+    
+    if (title) sanitizedData.title = title;
+    if (description) sanitizedData.description = description;
+    if (endTime) sanitizedData.endTime = new Date(endTime);
+    if (status) sanitizedData.status = status;
+    if (tags) sanitizedData.tags = tags;
+    if (content) sanitizedData.content = content;
+    if (summary) sanitizedData.summary = summary;
     
     const updatedSession = await Session.findByIdAndUpdate(
       id, 
@@ -106,8 +123,18 @@ const updateVideo = async (req, res) => {
     }
     
     // Extract only allowed fields from the request body
-    const { title, youtubeUrl, summary, notes } = updateData;
-    const sanitizedData = { title, youtubeUrl, summary, notes };
+    const { title, youtubeUrl, summary, notes, tags, thumbnailUrl, channelTitle, duration, isPublic } = updateData;
+    const sanitizedData = {};
+    
+    if (title) sanitizedData.title = title;
+    if (youtubeUrl) sanitizedData.youtubeUrl = youtubeUrl;
+    if (summary) sanitizedData.summary = summary;
+    if (notes) sanitizedData.notes = notes;
+    if (tags) sanitizedData.tags = tags;
+    if (thumbnailUrl) sanitizedData.thumbnailUrl = thumbnailUrl;
+    if (channelTitle) sanitizedData.channelTitle = channelTitle;
+    if (duration) sanitizedData.duration = duration;
+    if (isPublic !== undefined) sanitizedData.isPublic = isPublic;
     
     const updatedVideo = await Video.findByIdAndUpdate(
       id, 

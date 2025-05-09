@@ -4,42 +4,87 @@ const videoSchema = new mongoose.Schema({
   user: {
     type: mongoose.Schema.Types.ObjectId,
     ref: 'User',
-    required: true
+    required: [true, 'User ID is required'],
+    validate: {
+      validator: function(v) {
+        return mongoose.Types.ObjectId.isValid(v);
+      },
+      message: 'Invalid user ID format'
+    }
   },
   title: {
     type: String,
-    required: true,
-    trim: true
+    required: [true, 'Title is required'],
+    trim: true,
+    minlength: [1, 'Title cannot be empty']
   },
   youtubeUrl: {
     type: String,
-    required: true,
-    trim: true
+    required: [true, 'YouTube URL is required'],
+    trim: true,
+    validate: {
+      validator: function(v) {
+        return /^(https?:\/\/)?(www\.)?(youtube\.com|youtu\.be)\/.+/.test(v);
+      },
+      message: 'Invalid YouTube URL format'
+    }
   },
   videoId: {
     type: String,
-    required: true,
-    unique: true
+    required: [true, 'Video ID is required'],
+    unique: true,
+    validate: {
+      validator: function(v) {
+        return /^[a-zA-Z0-9_-]{11}$/.test(v);
+      },
+      message: 'Invalid YouTube video ID format'
+    }
   },
   thumbnailUrl: {
     type: String,
-    required: true
+    required: [true, 'Thumbnail URL is required'],
+    validate: {
+      validator: function(v) {
+        return /^https?:\/\/.+/.test(v);
+      },
+      message: 'Invalid thumbnail URL format'
+    }
   },
   channelTitle: {
     type: String,
-    required: true
+    required: [true, 'Channel title is required'],
+    trim: true
   },
   duration: {
     type: String,
-    required: true
+    required: [true, 'Duration is required'],
+    validate: {
+      validator: function(v) {
+        return /^\d+:\d{2}$/.test(v);
+      },
+      message: 'Invalid duration format (should be MM:SS)'
+    }
   },
   summary: {
     type: String,
     trim: true
   },
   notes: [{
-    timestamp: String,
-    content: String
+    timestamp: {
+      type: String,
+      required: true,
+      validate: {
+        validator: function(v) {
+          return /^\d+:\d{2}$/.test(v);
+        },
+        message: 'Invalid timestamp format (should be MM:SS)'
+      }
+    },
+    content: {
+      type: String,
+      required: true,
+      trim: true
+    }
   }],
   tags: [{
     type: String,
@@ -66,6 +111,11 @@ videoSchema.pre('save', function(next) {
   next();
 });
 
+// Add indexes for better query performance
+videoSchema.index({ user: 1, createdAt: -1 });
+videoSchema.index({ tags: 1 });
+
 const Video = mongoose.model('Video', videoSchema);
 
 module.exports = Video;
+
