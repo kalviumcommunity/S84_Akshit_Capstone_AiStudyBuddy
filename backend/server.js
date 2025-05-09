@@ -19,7 +19,7 @@ app.use(express.json());
 app.use(express.urlencoded({ extended: true }));
 
 // Routes
-const sessionRoutes = require('./routes/session');
+const sessionRoutes = require('./routes/sessionRoutes');
 const noteRoutes = require('./routes/noteRoutes');
 const videoRoutes = require('./routes/videoRoutes');
 const putRoutes = require('./routes/putRoutes');
