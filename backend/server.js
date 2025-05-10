@@ -1,11 +1,16 @@
 const express = require('express');
 const mongoose = require('mongoose');
 const dotenv = require('dotenv');
+const uploadRoutes = require('./routes/upload');
+const cors = require('cors');
+const app = express();
 
+app.use(cors());
+app.use('/uploads', express.static('uploads')); // Serve uploaded files
+app.use('/api', uploadRoutes);
 // Load environment variables
 dotenv.config();
 
-const app = express();
 
 // MongoDB Connection
 const MONGO = process.env.MONGODB_URI;

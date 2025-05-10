@@ -115,7 +115,6 @@ videoSchema.pre('save', function(next) {
 videoSchema.index({ user: 1, createdAt: -1 });
 videoSchema.index({ tags: 1 });
 videoSchema.index({ isPublic: 1 });
-videoSchema.index({ videoId: 1 }, { unique: true });
 videoSchema.index({ 'notes.timestamp': 1 });
 
 const Video = mongoose.model('Video', videoSchema);
