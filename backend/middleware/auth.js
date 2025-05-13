@@ -15,8 +15,8 @@ const auth = async (req, res, next) => {
 
     if (!user) {
       return res.status(401).json({ 
-        message: 'User not found',
-        error: 'The user associated with this token no longer exists'
+        message: 'Authentication failed',
+        error: 'Invalid user credentials'
       });
     }
 
@@ -25,19 +25,19 @@ const auth = async (req, res, next) => {
   } catch (error) {
     if (error.name === 'JsonWebTokenError') {
       return res.status(401).json({ 
-        message: 'Invalid token',
-        error: 'The authentication token is invalid'
+        message: 'Authentication failed',
+        error: 'Invalid authentication token'
       });
     }
     if (error.name === 'TokenExpiredError') {
       return res.status(401).json({ 
-        message: 'Token expired',
-        error: 'The authentication token has expired'
+        message: 'Authentication failed',
+        error: 'Authentication token has expired'
       });
     }
     res.status(401).json({ 
       message: 'Authentication failed',
-      error: error.message 
+      error: 'An unexpected authentication error occurred'
     });
   }
 };
