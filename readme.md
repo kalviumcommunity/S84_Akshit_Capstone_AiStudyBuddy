@@ -21,6 +21,7 @@ AI Study Buddy is an AI-powered web app that helps users upload their study note
 
 ## 🗓️ Capstone Daily Plan (Level-1)
 
+
 | Day | Task |
 |-----|------|
 | 1 | Submit project idea + daily plan |
