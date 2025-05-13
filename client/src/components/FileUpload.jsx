@@ -8,6 +8,27 @@ function FileUpload() {
   const [isUploading, setIsUploading] = useState(false);
   const [uploadedFile, setUploadedFile] = useState(null);
 
+  const sanitizePath = (path) => {
+    if (!path) return '';
+    // Remove any characters that aren't alphanumeric, forward slashes, dots, or hyphens
+    return path.replace(/[^\w/.-]/g, '');
+  };
+
+  const sanitizeFilename = (filename) => {
+    if (!filename) return 'Uploaded file';
+    // Limit filename length and remove any potentially dangerous characters
+    return filename.substring(0, 50).replace(/[^\w.-]/g, '');
+  };
+
+  const getFileUrl = (path) => {
+    if (!path) return '';
+    // If the path already starts with http, return it as is
+    if (path.startsWith('http')) return path;
+    // Otherwise, construct the full URL
+    const baseUrl = api.defaults.baseURL || '';
+    return `${baseUrl}${path.startsWith('/') ? path : `/${path}`}`;
+  };
+
   const handleFileChange = (e) => {
     setFile(e.target.files[0]);
     setError('');
@@ -26,7 +47,7 @@ function FileUpload() {
     formData.append('file', file);
 
     try {
-      const response = await api.post('/api/upload', formData, {
+      const response = await api.post('/api/upload/upload', formData, {
         headers: {
           'Content-Type': 'multipart/form-data'
         }
@@ -81,22 +102,27 @@ function FileUpload() {
         <div className="mt-4 p-4 border rounded-lg">
           <h3 className="text-lg font-semibold mb-2">Uploaded File:</h3>
           <div className="space-y-2">
-            <p><span className="font-medium">Name:</span> {uploadedFile.originalname}</p>
+            <p><span className="font-medium">Name:</span> {sanitizeFilename(uploadedFile.originalname)}</p>
             <p><span className="font-medium">Size:</span> {(uploadedFile.size / 1024).toFixed(2)} KB</p>
             <p><span className="font-medium">Type:</span> {uploadedFile.mimetype}</p>
             {uploadedFile.mimetype.startsWith('image/') && (
               <div className="mt-2">
                 <img 
-                  src={`${api.defaults.baseURL}${uploadedFile.path}`} 
-                  alt={uploadedFile.originalname}
+                  src={getFileUrl(uploadedFile.path)}
+                  alt={sanitizeFilename(uploadedFile.originalname)}
                   className="max-w-full h-auto rounded-lg shadow-md"
+                  onError={(e) => {
+                    console.error('Image load error:', e);
+                    e.target.style.display = 'none';
+                    setError('Failed to load image preview. Please try refreshing the page.');
+                  }}
                 />
               </div>
             )}
             {uploadedFile.mimetype === 'application/pdf' && (
               <div className="mt-2">
                 <a 
-                  href={`${api.defaults.baseURL}${uploadedFile.path}`}
+                  href={getFileUrl(uploadedFile.path)}
                   target="_blank"
                   rel="noopener noreferrer"
                   className="text-indigo-600 hover:text-indigo-800"

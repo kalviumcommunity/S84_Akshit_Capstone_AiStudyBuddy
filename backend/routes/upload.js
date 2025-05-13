@@ -4,6 +4,7 @@ const express = require('express');
 const multer = require('multer');
 const path = require('path');
 const fs = require('fs');
+const auth = require('../middleware/auth');
 
 const router = express.Router();
 
@@ -44,8 +45,8 @@ const upload = multer({
   }
 });
 
-// Upload endpoint
-router.post('/upload', upload.single('file'), (req, res) => {
+// Upload endpoint - protected by authentication
+router.post('/upload', auth, upload.single('file'), (req, res) => {
   try {
     if (!req.file) {
       return res.status(400).json({ 
@@ -74,8 +75,8 @@ router.post('/upload', upload.single('file'), (req, res) => {
   }
 });
 
-// Get all uploaded files
-router.get('/files', (req, res) => {
+// Get all uploaded files - protected by authentication
+router.get('/files', auth, (req, res) => {
   try {
     const files = fs.readdirSync(uploadsDir);
     const fileDetails = files.map(filename => {
