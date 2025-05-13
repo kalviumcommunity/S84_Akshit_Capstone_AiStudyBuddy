@@ -1,11 +1,12 @@
 import { createContext, useContext, useState, useEffect } from 'react';
 import axios from 'axios';
 
+// Log environment variable for debugging
+console.log('VITE_API_URL:', import.meta.env.VITE_API_URL);
+
 // Create axios instance with base URL
 const api = axios.create({
-  baseURL: (import.meta.env.VITE_API_URL && import.meta.env.VITE_API_URL.startsWith('http')) 
-  ? import.meta.env.VITE_API_URL 
-  : 'http://localhost:5000',
+  baseURL: import.meta.env.VITE_API_URL,
   headers: {
     'Content-Type': 'application/json'
   }
@@ -13,7 +14,7 @@ const api = axios.create({
 
 // Add request interceptor for debugging
 api.interceptors.request.use(request => {
-  console.log('Starting Request:', request);
+  console.log('Making request to:', request.baseURL + request.url);
   return request;
 });
 
@@ -24,7 +25,10 @@ api.interceptors.response.use(
     return response;
   },
   error => {
-    console.error('Response Error:', error.response || error);
+    console.error('Response Error:', error);
+    if (error.code === 'ERR_NETWORK') {
+      console.error('Network Error - Check if the backend is running and accessible');
+    }
     return Promise.reject(error);
   }
 );
