@@ -10,18 +10,35 @@ const auth = async (req, res, next) => {
       return res.status(401).json({ message: 'Authentication required' });
     }
 
-
     const decoded = jwt.verify(token, process.env.JWT_SECRET);
     const user = await User.findById(decoded.userId);
 
     if (!user) {
-      return res.status(401).json({ message: 'User not found' });
+      return res.status(401).json({ 
+        message: 'User not found',
+        error: 'The user associated with this token no longer exists'
+      });
     }
 
     req.user = user;
     next();
   } catch (error) {
-    res.status(401).json({ message: 'Invalid token' });
+    if (error.name === 'JsonWebTokenError') {
+      return res.status(401).json({ 
+        message: 'Invalid token',
+        error: 'The authentication token is invalid'
+      });
+    }
+    if (error.name === 'TokenExpiredError') {
+      return res.status(401).json({ 
+        message: 'Token expired',
+        error: 'The authentication token has expired'
+      });
+    }
+    res.status(401).json({ 
+      message: 'Authentication failed',
+      error: error.message 
+    });
   }
 };
 
