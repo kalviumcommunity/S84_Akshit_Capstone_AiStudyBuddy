@@ -1,38 +1,7 @@
 import { createContext, useContext, useState, useEffect } from 'react';
-import axios from 'axios';
+import api from '../api/api';
 
-// Log environment variable for debugging
-console.log('VITE_API_URL:', import.meta.env.VITE_API_URL);
-
-// Create axios instance with base URL
-const api = axios.create({
-  baseURL: import.meta.env.VITE_API_URL,
-  headers: {
-    'Content-Type': 'application/json'
-  }
-});
-
-// Add request interceptor for debugging
-api.interceptors.request.use(request => {
-  console.log('Making request to:', request.baseURL + request.url);
-  return request;
-});
-
-// Add response interceptor for debugging
-api.interceptors.response.use(
-  response => {
-    console.log('Response:', response);
-    return response;
-  },
-  error => {
-    console.error('Response Error:', error);
-    if (error.code === 'ERR_NETWORK') {
-      console.error('Network Error - Check if the backend is running and accessible');
-    }
-    return Promise.reject(error);
-  }
-);
-
+// Create context
 const AuthContext = createContext(null);
 
 export const AuthProvider = ({ children }) => {
