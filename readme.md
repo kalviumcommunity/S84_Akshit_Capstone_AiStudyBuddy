@@ -1,7 +1,7 @@
 # AI Study Buddy 📚🤖
 
 # frontend link (netlify)
-[https://681efffd2795858547b800dc--aistudybuddy.netlify.app/]
+[https://68234eedf2edc600081715e2--aistudybuddy.netlify.app]
 
 # Backend link (render)
 [https://aistudybuddy.onrender.com] 
