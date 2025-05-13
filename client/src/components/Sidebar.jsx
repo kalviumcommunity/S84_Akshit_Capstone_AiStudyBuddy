@@ -1,7 +1,16 @@
 import React from 'react';
-import { Link } from 'react-router-dom';
+import { Link, useNavigate } from 'react-router-dom';
+import { useAuth } from '../context/AuthContext';
 
 const Sidebar = () => {
+  const { user, logout } = useAuth();
+  const navigate = useNavigate();
+
+  const handleLogout = () => {
+    logout();
+    navigate('/login');
+  };
+
   const navItems = [
     { name: 'Chat', icon: '💬', path: '/chat' },
     { name: 'Upload', icon: '📤', path: '/upload' },
@@ -14,6 +23,11 @@ const Sidebar = () => {
       {/* Logo */}
       <div className="p-4 border-b">
         <h1 className="text-2xl font-bold text-blue-600">AI Study Buddy</h1>
+        {user && (
+          <p className="text-sm text-gray-600 mt-1">
+            Welcome, {user.username}
+          </p>
+        )}
       </div>
 
       {/* Navigation */}
@@ -35,17 +49,12 @@ const Sidebar = () => {
 
       {/* User Profile */}
       <div className="p-4 border-t">
-        <div className="flex items-center space-x-3">
-          <div className="w-10 h-10 rounded-full bg-gray-200 flex items-center justify-center">
-            <span className="text-xl">👤</span>
-          </div>
-          <div>
-            <p className="font-medium">User Name</p>
-            <button className="text-sm text-red-500 hover:text-red-600">
-              Sign Out
-            </button>
-          </div>
-        </div>
+        <button
+          onClick={handleLogout}
+          className="w-full px-4 py-2 text-sm text-white bg-red-600 hover:bg-red-700 rounded"
+        >
+          Logout
+        </button>
       </div>
     </div>
   );
