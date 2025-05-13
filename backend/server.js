@@ -30,7 +30,8 @@ mongoose.connect(MONGO_URI)
 
 // CORS configuration
 app.use(cors({
-  origin: true, // Allow all origins
+  origin: ['https://aistudybuddy.onrender.com', 'http://localhost:3000'],
+  credentials: true,
   methods: ['GET', 'POST', 'PUT', 'DELETE', 'OPTIONS'],
   allowedHeaders: ['Content-Type', 'Authorization'],
   exposedHeaders: ['Content-Range', 'X-Content-Range']
@@ -53,7 +54,15 @@ const userRoutes = require('./routes/userRoutes');
 app.get('/', (req, res) => {
   res.json({
     message: 'Welcome to AI Study Buddy API',
-    backendUrl: 'https://aistudybuddy.onrender.com'
+    version: '1.0.0',
+    status: 'active',
+    endpoints: {
+      users: '/api/users',
+      sessions: '/api/sessions',
+      notes: '/api/notes',
+      videos: '/api/videos',
+      upload: '/api/upload'
+    }
   });
 });
 
@@ -62,7 +71,6 @@ app.use('/api/users', userRoutes);
 app.use('/api/sessions', sessionRoutes);
 app.use('/api/notes', noteRoutes);
 app.use('/api/videos', videoRoutes);
-app.use('/api/put', putRoutes);
 app.use('/api/upload', uploadRoutes);
 
 // Error handling middleware
@@ -70,7 +78,7 @@ app.use((err, req, res, next) => {
   console.error('Error:', err);
   res.status(500).json({
     error: 'Something went wrong!',
-    message: 'An unexpected error occurred'
+    message: err.message || 'An unexpected error occurred'
   });
 });
 
@@ -78,7 +86,8 @@ app.use((err, req, res, next) => {
 app.use((req, res) => {
   res.status(404).json({
     error: 'Not Found',
-    message: 'The requested resource was not found'
+    message: 'The requested resource was not found',
+    path: req.path
   });
 });
 
@@ -87,4 +96,10 @@ const PORT = process.env.PORT || 5000;
 app.listen(PORT, () => {
   console.log('Uploads directory:', path.join(__dirname, 'uploads'));
   console.log(`Server is running on port ${PORT}🚀`);
+  console.log('Available routes:');
+  console.log('- /api/users');
+  console.log('- /api/sessions');
+  console.log('- /api/notes');
+  console.log('- /api/videos');
+  console.log('- /api/upload');
 });
