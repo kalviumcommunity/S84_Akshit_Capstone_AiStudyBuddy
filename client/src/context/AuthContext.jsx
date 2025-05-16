@@ -62,8 +62,8 @@ export const AuthProvider = ({ children }) => {
 
       return { success: true };
     } catch (error) {
-      console.error('Login error:', error.response?.data || error.message);
-      const errorMessage = error.response?.data?.message || 'Login failed. Please check your credentials.';
+      console.error('Login error full object:', error);
+const errorMessage = error?.response?.data?.message || error?.message || 'Login failed. Please check your credentials.';
       setError(errorMessage);
       localStorage.removeItem('token');
       setUser(null);
