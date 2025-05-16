@@ -4,7 +4,7 @@ const API_URL = import.meta.env.VITE_API_URL || 'https://aistudybuddy.onrender.c
 
 const api = axios.create({
   baseURL: API_URL,
-  withCredentials: false, // Changed to false temporarily
+  // withCredentials: true,
   headers: {
     'Content-Type': 'application/json',
     'Accept': 'application/json',

@@ -3,10 +3,10 @@ const mongoose = require('mongoose');
 const dotenv = require('dotenv');
 const cors = require('cors');
 const path = require('path');
-const app = express();
 
-// Load environment variables
 dotenv.config();
+
+const app = express();
 
 // Validate required environment variables
 if (!process.env.JWT_SECRET) {
@@ -14,13 +14,13 @@ if (!process.env.JWT_SECRET) {
   process.exit(1);
 }
 
-// MongoDB Connection
 const MONGO_URI = process.env.MONGODB_URI;
 if (!MONGO_URI) {
   console.error('MONGODB_URI is not set in environment variables');
   process.exit(1);
 }
 
+// Connect to MongoDB
 mongoose.connect(MONGO_URI)
   .then(() => console.log('Connected to MongoDB'))
   .catch(err => {
@@ -29,15 +29,20 @@ mongoose.connect(MONGO_URI)
   });
 
 // CORS configuration
-app.use(cors({
-  origin: ['https://aistudybuddy.onrender.com', 'http://localhost:3000'],
+const corsOptions = {
+  origin: [
+    'https://aistudybuddy.onrender.com',
+    'http://localhost:5173',
+    'https://aistudybuddy.netlify.app'
+  ],
   credentials: true,
   methods: ['GET', 'POST', 'PUT', 'DELETE', 'OPTIONS'],
-  allowedHeaders: ['Content-Type', 'Authorization'],
-  exposedHeaders: ['Content-Range', 'X-Content-Range']
-}));
+  allowedHeaders: ['Content-Type', 'Authorization']
+};
 
+// Middleware
 app.use(express.json());
+app.use(cors(corsOptions)); // <-- Handles all CORS including OPTIONS preflight
 
 // Serve uploaded files
 app.use('/uploads', express.static(path.join(__dirname, 'uploads')));
