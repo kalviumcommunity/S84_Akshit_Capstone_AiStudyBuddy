@@ -4,6 +4,7 @@ import { AuthProvider } from './context/AuthContext';
 import Login from './components/Login';
 import Register from './components/Register';
 import ProtectedRoute from './components/ProtectedRoute';
+import Welcome from './components/Welcome';
 import './App.css';
 import Sidebar from './components/Sidebar';
 import Chat from './components/Chat';
@@ -16,10 +17,13 @@ function App() {
     <Router>
       <AuthProvider>
         <Routes>
+          {/* Welcome page */}
+          <Route path="/" element={<Welcome />} />
+          
           {/* Public routes */}
           <Route path="/login" element={<Login />} />
           <Route path="/register" element={<Register />} />
-          
+
           {/* Protected routes */}
           <Route
             path="/*"
@@ -30,7 +34,6 @@ function App() {
                   <main className="flex-1 overflow-auto">
                     <div className="container mx-auto p-6">
                       <Routes>
-                        <Route path="/" element={<Navigate to="/chat" replace />} />
                         <Route path="/chat" element={<Chat />} />
                         <Route path="/upload" element={<FileUpload />} />
                         <Route path="/youtube" element={<YouTubeInput />} />
