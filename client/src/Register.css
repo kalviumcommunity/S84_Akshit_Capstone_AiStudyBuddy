@@ -1,0 +1,305 @@
+/* Register page styles */
+.register-container {
+  min-height: 100vh;
+  background: linear-gradient(135deg, #1a1a1a 0%, #2d2d2d 100%);
+  display: flex;
+  justify-content: center;
+  align-items: center;
+  padding: 2rem;
+}
+
+.register-content {
+  width: 100%;
+  max-width: 1200px;
+  margin: 0 auto;
+}
+
+.app-header {
+  display: flex;
+  justify-content: space-between;
+  align-items: center;
+  margin-bottom: 2rem;
+}
+
+.app-logo {
+  font-size: 1.5rem;
+  font-weight: bold;
+  color: #fff;
+  text-shadow: 0 0 10px rgba(255, 255, 255, 0.5);
+}
+
+.auth-buttons {
+  display: flex;
+  gap: 1rem;
+}   
+
+.main-section {
+  background: rgba(255, 255, 255, 0.1);
+  backdrop-filter: blur(10px);
+  border-radius: 1rem;
+  padding: 2rem;
+  box-shadow: 0 8px 32px rgba(0, 0, 0, 0.1);
+  max-width: 500px;
+  margin: 0 auto;
+}
+
+.main-section h1 {
+  color: #fff;
+  font-size: 2rem;
+  margin-bottom: 0.5rem;
+  text-align: center;
+}
+
+.main-section p {
+  color: #ccc;
+  text-align: center;
+  margin-bottom: 2rem;
+}
+
+.register-form {
+  display: flex;
+  flex-direction: column;
+  gap: 1rem;
+}
+
+.form-group {
+  position: relative;
+}
+
+.form-group input {
+  width: 100%;
+  padding: 1rem;
+  background: rgba(255, 255, 255, 0.05);
+  border: 1px solid rgba(255, 255, 255, 0.1);
+  border-radius: 0.5rem;
+  color: #fff;
+  font-size: 1rem;
+  transition: all 0.3s ease;
+}
+
+.form-group input:focus {
+  outline: none;
+  border-color: #000000;
+  box-shadow: 0 0 0 2px rgba(0, 0, 0, 0.2);
+}
+
+.form-group input::placeholder {
+  color: #999;
+}
+
+.error-message {
+  background: rgba(220, 38, 38, 0.1);
+  border: 1px solid rgba(220, 38, 38, 0.2);
+  color: #ef4444;
+  padding: 0.75rem;
+  border-radius: 0.5rem;
+  margin-bottom: 1rem;
+}
+
+.register-btn {
+  position: relative;
+  padding: 0.8rem 2rem;
+  border: 2px solid transparent;
+  background: transparent;
+  color: #fff;
+  font-weight: 600;
+  font-size: 1.1rem;
+  cursor: pointer;
+  border-radius: 50px / 25px;
+  overflow: hidden;
+  user-select: none;
+  transition: color 0.3s ease;
+  z-index: 1;
+  white-space: nowrap;
+  display: inline-flex;
+  align-items: center;
+  justify-content: center;
+  height: 45px;
+  line-height: 1;
+  width: 100%;
+}
+
+.register-btn::before {
+  content: '';
+  position: absolute;
+  top: 0;
+  left: -100%;
+  width: 100%;
+  height: 100%;
+  background: linear-gradient(120deg, rgba(255,255,255,0.2) 0%, rgba(255,255,255,0.05) 50%, transparent 100%);
+  transition: left 0.4s ease;
+  z-index: 0;
+}
+
+.register-btn:hover::before {
+  left: 0;
+}
+
+.register-btn:hover {
+  color: #fff;
+}
+
+.register-btn .glow-container {
+  position: absolute;
+  inset: 2px;
+  border-radius: 50px / 25px;
+  overflow: hidden;
+  pointer-events: none;
+  z-index: 0;
+}
+
+.register-btn .glow-line {
+  position: absolute;
+  width: 200%;
+  height: 200%;
+  border: 2px solid white;
+  border-top-color: transparent;
+  border-bottom-color: transparent;
+  border-radius: 50% / 25%;
+  box-shadow: 0 0 8px 2px white;
+  top: -50%;
+  left: -50%;
+  transform-origin: 50% 50%;
+  opacity: 0.9;
+  pointer-events: none;
+}
+
+.register-btn .glow-line.second {
+  border-left-color: transparent;
+  border-right-color: transparent;
+  border-top-color: white;
+  border-bottom-color: white;
+  box-shadow: 0 0 8px 2px white;
+}
+
+.register-btn .glow-line.first {
+  animation: rotateGlow 4s linear infinite;
+}
+
+.register-btn .glow-line.second {
+  animation: rotateGlowReverse 4s linear infinite;
+}
+
+@keyframes rotateGlow {
+  0% { transform: rotate(0deg); }
+  100% { transform: rotate(360deg); }
+}
+
+@keyframes rotateGlowReverse {
+  0% { transform: rotate(0deg); }
+  100% { transform: rotate(-360deg); }
+}
+
+.auth-link {
+  color: #000000;
+  text-decoration: none;
+  text-align: center;
+  margin-top: 1rem;
+  transition: color 0.3s ease;
+}
+
+.auth-link:hover {
+  color: #333333;
+}
+
+/* Glowing button effect */
+.glowing-btn {
+  position: relative;
+  padding: 0.8rem 2rem;
+  border: 2px solid transparent;
+  background: #000000;
+  color: #fff;
+  font-weight: 600;
+  font-size: 1.1rem;
+  cursor: pointer;
+  border-radius: 50px / 25px;
+  overflow: hidden;
+  user-select: none;
+  transition: all 0.3s ease;
+  z-index: 1;
+  white-space: nowrap;
+  display: inline-flex;
+  align-items: center;
+  justify-content: center;
+  height: 45px;
+  line-height: 1;
+}
+
+.glowing-btn:hover {
+  background: #1a1a1a;
+  color: #fff;
+}
+
+.glowing-btn:disabled {
+  background: #333333;
+  cursor: not-allowed;
+}
+
+.glowing-btn::before {
+  content: '';
+  position: absolute;
+  top: 0;
+  left: -100%;
+  width: 100%;
+  height: 100%;
+  background: linear-gradient(120deg, rgba(255,255,255,0.2) 0%, rgba(255,255,255,0.05) 50%, transparent 100%);
+  transition: left 0.4s ease;
+  z-index: 0;
+}
+
+.glowing-btn:hover::before {
+  left: 0;
+}
+
+.glowing-btn .glow-container {
+  position: absolute;
+  inset: 2px;
+  border-radius: 50px / 25px;
+  overflow: hidden;
+  pointer-events: none;
+  z-index: 0;
+}
+
+.glowing-btn .glow-line {
+  position: absolute;
+  width: 200%;
+  height: 200%;
+  border: 2px solid white;
+  border-top-color: transparent;
+  border-bottom-color: transparent;
+  border-radius: 50% / 25%;
+  box-shadow: 0 0 8px 2px white;
+  top: -50%;
+  left: -50%;
+  transform-origin: 50% 50%;
+  opacity: 0.9;
+  pointer-events: none;
+}
+
+.glowing-btn .glow-line.second {
+  border-left-color: transparent;
+  border-right-color: transparent;
+  border-top-color: white;
+  border-bottom-color: white;
+  box-shadow: 0 0 8px 2px white;
+}
+
+.glowing-btn .glow-line.first {
+  animation: rotateGlow 4s linear infinite;
+}
+
+.glowing-btn .glow-line.second {
+  animation: rotateGlowReverse 4s linear infinite;
+}
+
+/* Responsive adjustments */
+@media (max-width: 768px) {
+  .register-form {
+    padding: 1.5rem;
+  }
+  
+  .register-btn {
+    padding: 0.6rem 1.5rem;
+    font-size: 1rem;
+  }
+} 
