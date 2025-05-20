@@ -1,6 +1,6 @@
 const express = require('express');
 const router = express.Router();
-const { getAllVideos, getVideoById, getVideosByUser, createVideo, validateVideo, deleteVideo } = require('../controllers/videoController');
+const { getAllVideos, getVideoById, getVideosByUser, createVideo, validateVideo, deleteVideo, getLatestVideo } = require('../controllers/videoController');
 const { updateVideo, validateVideoUpdate } = require('../controllers/putController');
 
 // GET /api/videos - Get all videos
@@ -8,6 +8,9 @@ router.get('/', getAllVideos);
 
 // GET /api/videos/user/:userId - Get videos by user ID
 router.get('/user/:userId', getVideosByUser);
+
+// GET /api/videos/latest - Get the latest video
+router.get('/latest', getLatestVideo);
 
 // GET /api/videos/:id - Get a specific video by ID
 router.get('/:id', getVideoById);

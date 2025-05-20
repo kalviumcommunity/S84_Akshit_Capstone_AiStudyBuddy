@@ -5,12 +5,33 @@ import Login from './components/Login';
 import Register from './components/Register';
 import ProtectedRoute from './components/ProtectedRoute';
 import Welcome from './components/Welcome';
-import './App.css';
-import Sidebar from './components/Sidebar';
-import Chat from './components/Chat';
+import Navbar from './components/Navbar';
 import FileUpload from './components/FileUpload';
 import YouTubeInput from './components/YouTubeInput';
+import Chat from './components/Chat';
 import Summary from './components/Summary';
+import './App.css';
+
+// Component for the dashboard layout
+function DashboardLayout() {
+  return (
+    <div className="app-root">
+      <Navbar />
+      <div className="dashboard-layout">
+        <main className="dashboard-main">
+          <section className="dashboard-left">
+            <FileUpload />
+            <YouTubeInput />
+            <Summary />
+          </section>
+          <section className="dashboard-right">
+            <Chat />
+          </section>
+        </main>
+      </div>
+    </div>
+  );
+}
 
 function App() {
   return (
@@ -18,30 +39,15 @@ function App() {
       <Routes>
         {/* Welcome page */}
         <Route path="/" element={<Welcome />} />
-        
         {/* Public routes */}
         <Route path="/login" element={<Login />} />
         <Route path="/register" element={<Register />} />
-
-        {/* Protected routes */}
+        {/* Protected dashboard layout */}
         <Route
           path="/*"
           element={
             <ProtectedRoute>
-              <div className="flex h-screen bg-gray-100">
-                <Sidebar />
-                <main className="flex-1 overflow-auto">
-                  <div className="container mx-auto p-6">
-                    <Routes>
-                      <Route path="/chat" element={<Chat />} />
-                      <Route path="/upload" element={<FileUpload />} />
-                      <Route path="/youtube" element={<YouTubeInput />} />
-                      <Route path="/summaries" element={<Summary />} />
-                      <Route path="*" element={<Navigate to="/chat" replace />} />
-                    </Routes>
-                  </div>
-                </main>
-              </div>
+              <DashboardLayout />
             </ProtectedRoute>
           }
         />

@@ -1,139 +1,161 @@
-import { useState } from 'react';
+import React, { useState, useCallback, useEffect } from 'react';
+import { useDropzone } from 'react-dropzone';
 import api from '../api/api';
+import { useAuth } from '../context/AuthContext';
+import Summary from './Summary';
+import './FileUpload.css';
 
 function FileUpload() {
+  const { user } = useAuth();
   const [file, setFile] = useState(null);
-  const [uploadMsg, setUploadMsg] = useState('');
   const [error, setError] = useState('');
-  const [isUploading, setIsUploading] = useState(false);
-  const [uploadedFile, setUploadedFile] = useState(null);
+  const [uploading, setUploading] = useState(false);
+  const [summary, setSummary] = useState('');
+  const [currentFileId, setCurrentFileId] = useState(null);
+  const [fileSelectedTime, setFileSelectedTime] = useState(null);
 
-  const sanitizePath = (path) => {
-    if (!path) return '';
-    // Remove any characters that aren't alphanumeric, forward slashes, dots, or hyphens
-    return path.replace(/[^\w/.-]/g, '');
-  };
+  const onDrop = useCallback((acceptedFiles) => {
+    if (acceptedFiles.length > 0) {
+      setFile(acceptedFiles[0]);  // Only take the first file
+      setSummary(''); // Clear any existing summary
+      setCurrentFileId(null); // Clear any existing file ID
+      setFileSelectedTime(Date.now()); // Record when file was selected
+      setError(''); // Clear any existing errors
+    }
+  }, []);
 
-  const sanitizeFilename = (filename) => {
-    if (!filename) return 'Uploaded file';
-    // Limit filename length and remove any potentially dangerous characters
-    return filename.substring(0, 50).replace(/[^\w.-]/g, '');
-  };
+  // Check if file has been selected but not uploaded after 5 minutes
+  useEffect(() => {
+    if (file && fileSelectedTime) {
+      const timeoutId = setTimeout(() => {
+        setError('Please upload your selected file or remove it to select a new one.');
+      }, 5 * 60 * 1000); // 5 minutes
 
-  const getFileUrl = (path) => {
-    if (!path) return '';
-    // If the path already starts with http, return it as is
-    if (path.startsWith('http')) return path;
-    // Otherwise, construct the full URL
-    const baseUrl = api.defaults.baseURL || '';
-    return `${baseUrl}${path.startsWith('/') ? path : `/${path}`}`;
-  };
+      return () => clearTimeout(timeoutId);
+    }
+  }, [file, fileSelectedTime]);
 
-  const handleFileChange = (e) => {
-    setFile(e.target.files[0]);
-    setError('');
-    setUploadMsg('');
-    setUploadedFile(null);
-  };
+  const { getRootProps, getInputProps, isDragActive } = useDropzone({
+    onDrop,
+    accept: {
+      'application/pdf': ['.pdf'],
+      'text/plain': ['.txt'],
+      'application/msword': ['.doc'],
+      'application/vnd.openxmlformats-officedocument.wordprocessingml.document': ['.docx'],
+      'image/jpeg': ['.jpg', '.jpeg'],
+      'image/png': ['.png']
+    },
+    multiple: false,  // Only allow single file selection
+    noClick: false,
+    noDrag: false,
+    noKeyboard: false,
+    noDragEventsBubbling: false,
+    preventDropOnDocument: true,
+    disabled: false,
+    useFsAccessApi: true,
+    autoFocus: false,
+    onFileDialogOpen: () => {
+      // This will show "All Files" as default in the file picker
+      const input = document.querySelector('input[type="file"]');
+      if (input) {
+        input.setAttribute('accept', '*/*');
+      }
+    }
+  });
 
   const handleUpload = async () => {
-    if (!file) {
-      setError('Please select a file first');
+    if (!file || !user) {
+      setError('Please select a file to upload');
       return;
     }
 
-    setIsUploading(true);
+    setUploading(true);
+    setError('');
+    setSummary('');
+
     const formData = new FormData();
     formData.append('file', file);
+    formData.append('user', user._id);
 
     try {
-      const response = await api.post('/api/upload/upload', formData, {
+      const response = await api.post('/api/upload', formData, {
         headers: {
           'Content-Type': 'multipart/form-data'
         }
       });
-      setUploadMsg(response.data.message);
-      setUploadedFile(response.data.file);
-      setError('');
+
+      // Store the file ID and get the summary
+      setCurrentFileId(response.data.file._id);
+      setSummary(response.data.file.summary || 'No summary available');
+      setFile(null);
+      setFileSelectedTime(null); // Reset the selected time after successful upload
     } catch (err) {
-      console.error('Upload error:', err);
-      setError(err.response?.data?.message || 'Upload failed. Please try again.');
-      setUploadMsg('');
-      setUploadedFile(null);
+      // Handle the case where the file already exists
+      if (err.status === 'conflict' || err.message?.includes('already exists')) {
+        const existingFile = err.existingFile;
+        if (existingFile) {
+          setCurrentFileId(existingFile._id);
+          setSummary(existingFile.summary || 'No summary available');
+          setError('This file was already uploaded. Showing existing summary.');
+        } else {
+          setError('File exists but details could not be retrieved.');
+        }
+      } else {
+        setError(err.message || 'Failed to upload file');
+      }
     } finally {
-      setIsUploading(false);
+      setUploading(false);
     }
   };
 
+  const removeFile = () => {
+    setFile(null);
+    setSummary('');
+    setCurrentFileId(null);
+    setFileSelectedTime(null); // Reset the selected time when file is removed
+    setError(''); // Clear any errors when file is removed
+  };
+
   return (
-    <div className="p-4">
-      <div className="mb-4">
-        <input 
-          type="file" 
-          onChange={handleFileChange} 
-          accept="application/pdf,image/*"
-          className="block w-full text-sm text-gray-500
-            file:mr-4 file:py-2 file:px-4
-            file:rounded-full file:border-0
-            file:text-sm file:font-semibold
-            file:bg-indigo-50 file:text-indigo-700
-            hover:file:bg-indigo-100"
-          disabled={isUploading}
-        />
-      </div>
-      <button 
-        onClick={handleUpload}
-        disabled={isUploading || !file}
-        className={`px-4 py-2 rounded-md focus:outline-none focus:ring-2 focus:ring-offset-2 ${
-          isUploading || !file
-            ? 'bg-gray-400 cursor-not-allowed'
-            : 'bg-indigo-600 text-white hover:bg-indigo-700 focus:ring-indigo-500'
-        }`}
+    <div className="file-upload-container">
+      <h2 className="file-upload-title">Upload File</h2>
+      <div
+        {...getRootProps()}
+        className={`upload-area ${isDragActive ? 'dragging' : ''}`}
       >
-        {isUploading ? 'Uploading...' : 'Upload'}
-      </button>
-      {uploadMsg && (
-        <p className="mt-2 text-green-600">{uploadMsg}</p>
-      )}
-      {error && (
-        <p className="mt-2 text-red-600">{error}</p>
-      )}
-      {uploadedFile && (
-        <div className="mt-4 p-4 border rounded-lg">
-          <h3 className="text-lg font-semibold mb-2">Uploaded File:</h3>
-          <div className="space-y-2">
-            <p><span className="font-medium">Name:</span> {sanitizeFilename(uploadedFile.originalname)}</p>
-            <p><span className="font-medium">Size:</span> {(uploadedFile.size / 1024).toFixed(2)} KB</p>
-            <p><span className="font-medium">Type:</span> {uploadedFile.mimetype}</p>
-            {uploadedFile.mimetype.startsWith('image/') && (
-              <div className="mt-2">
-                <img 
-                  src={getFileUrl(uploadedFile.path)}
-                  alt={sanitizeFilename(uploadedFile.originalname)}
-                  className="max-w-full h-auto rounded-lg shadow-md"
-                  onError={(e) => {
-                    console.error('Image load error:', e);
-                    e.target.style.display = 'none';
-                    setError('Failed to load image preview. Please try refreshing the page.');
-                  }}
-                />
-              </div>
-            )}
-            {uploadedFile.mimetype === 'application/pdf' && (
-              <div className="mt-2">
-                <a 
-                  href={getFileUrl(uploadedFile.path)}
-                  target="_blank"
-                  rel="noopener noreferrer"
-                  className="text-indigo-600 hover:text-indigo-800"
-                >
-                  View PDF
-                </a>
-              </div>
-            )}
+        <input {...getInputProps()} className="file-input" />
+        <div className="upload-icon">📁</div>
+        <div className="upload-text">
+          <p className="upload-text-primary">Drag & drop a file here</p>
+          <p className="upload-text-secondary">or click to select a file</p>
+        </div>
+      </div>
+
+      {file && (
+        <div className="file-list">
+          <div className="file-item">
+            <span className="file-name">{file.name}</span>
+            <button
+              onClick={removeFile}
+              className="file-remove"
+            >
+              ×
+            </button>
           </div>
         </div>
       )}
+
+      {error && <div className="error-message">{error}</div>}
+
+      <button
+        onClick={handleUpload}
+        disabled={!file || uploading}
+        className="upload-button"
+      >
+        {uploading ? 'Uploading...' : 'Upload File'}
+      </button>
+
+      {summary && <Summary summary={summary} />}
     </div>
   );
 }

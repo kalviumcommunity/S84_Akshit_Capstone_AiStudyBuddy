@@ -1,68 +1,83 @@
-import React, { useState } from 'react';
+import React, { useState, useRef, useEffect } from 'react';
+import api from '../api/api';
+import './Chat.css';
 
-const Chat = () => {
+function Chat() {
   const [messages, setMessages] = useState([]);
   const [input, setInput] = useState('');
+  const [loading, setLoading] = useState(false);
+  const [error, setError] = useState('');
+  const messagesEndRef = useRef(null);
+
+  const scrollToBottom = () => {
+    messagesEndRef.current?.scrollIntoView({ behavior: 'smooth' });
+  };
+
+  useEffect(() => {
+    scrollToBottom();
+  }, [messages]);
 
   const handleSubmit = async (e) => {
     e.preventDefault();
     if (!input.trim()) return;
 
-    // Add user message
-    const userMessage = { role: 'user', content: input };
-    setMessages([...messages, userMessage]);
+    const userMessage = input.trim();
     setInput('');
+    setMessages(prev => [...prev, { role: 'user', content: userMessage }]);
+    setLoading(true);
+    setError('');
 
-    // TODO: Add API call to OpenAI here
-    // For now, just add a dummy response
-    const aiResponse = { role: 'assistant', content: 'This is a placeholder response.' };
-    setMessages(prev => [...prev, aiResponse]);
+    try {
+      const response = await api.post('/api/chat', { message: userMessage });
+      setMessages(prev => [...prev, { role: 'assistant', content: response.data.message }]);
+    } catch (err) {
+      setError(err.response?.data?.message || 'Failed to send message');
+    } finally {
+      setLoading(false);
+    }
   };
 
   return (
-    <div className="flex flex-col h-full bg-gray-50">
-      {/* Chat messages */}
-      <div className="flex-1 overflow-y-auto p-4 space-y-4">
+    <div className="chat-container">
+      <h2 className="chat-title">Chat</h2>
+      <div className="chat-messages">
         {messages.map((message, index) => (
-          <div
-            key={index}
-            className={`flex ${
-              message.role === 'user' ? 'justify-end' : 'justify-start'
-            }`}
-          >
-            <div
-              className={`max-w-[70%] rounded-lg p-3 ${
-                message.role === 'user'
-                  ? 'bg-blue-500 text-white'
-                  : 'bg-white text-gray-800 shadow'
-              }`}
-            >
-              {message.content}
-            </div>
+          <div key={index} className={`message ${message.role}`}>
+            <div className="message-content">{message.content}</div>
           </div>
         ))}
+        {loading && (
+          <div className="loading-indicator">
+            <span>AI is thinking...</span>
+          </div>
+        )}
+        <div ref={messagesEndRef} />
       </div>
-
-      {/* Input form */}
-      <form onSubmit={handleSubmit} className="p-4 border-t bg-white">
-        <div className="flex space-x-2">
-          <input
-            type="text"
-            value={input}
-            onChange={(e) => setInput(e.target.value)}
-            placeholder="Ask a question..."
-            className="flex-1 p-2 border rounded-lg focus:outline-none focus:ring-2 focus:ring-blue-500"
-          />
-          <button
-            type="submit"
-            className="px-4 py-2 bg-blue-500 text-white rounded-lg hover:bg-blue-600 transition-colors"
-          >
-            Send
-          </button>
-        </div>
+      {error && <div className="error-message">{error}</div>}
+      <form onSubmit={handleSubmit} className="chat-input-container">
+        <textarea
+          value={input}
+          onChange={(e) => setInput(e.target.value)}
+          placeholder="Ask me anything about your file or video"
+          className="chat-input"
+          rows={1}
+          onKeyDown={(e) => {
+            if (e.key === 'Enter' && !e.shiftKey) {
+              e.preventDefault();
+              handleSubmit(e);
+            }
+          }}
+        />
+        <button
+          type="submit"
+          disabled={loading || !input.trim()}
+          className="send-button"
+        >
+          Send
+        </button>
       </form>
     </div>
   );
-};
+}
 
 export default Chat; 
