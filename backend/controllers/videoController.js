@@ -167,11 +167,40 @@ const deleteVideo = async (req, res) => {
   }
 };
 
+// Get the latest video
+const getLatestVideo = async (req, res) => {
+  try {
+    const latestVideo = await Video.findOne()
+      .sort({ createdAt: -1 })
+      .limit(1);
+
+    if (!latestVideo) {
+      return res.status(404).json({
+        status: 'error',
+        message: 'No videos found'
+      });
+    }
+
+    res.status(200).json({
+      status: 'success',
+      video: latestVideo
+    });
+  } catch (error) {
+    console.error('Error getting latest video:', error);
+    res.status(500).json({
+      status: 'error',
+      message: 'Failed to get latest video',
+      error: error.message
+    });
+  }
+};
+
 module.exports = {
   getAllVideos,
   getVideoById,
   getVideosByUser,
   createVideo,
   validateVideo,
-  deleteVideo
+  deleteVideo,
+  getLatestVideo
 };

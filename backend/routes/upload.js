@@ -46,7 +46,7 @@ const upload = multer({
 });
 
 // Upload endpoint - protected by authentication
-router.post('/upload', auth, upload.single('file'), (req, res) => {
+router.post('/', auth, upload.single('file'), (req, res) => {
   try {
     if (!req.file) {
       return res.status(400).json({ 

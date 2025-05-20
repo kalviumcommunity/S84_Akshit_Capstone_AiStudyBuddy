@@ -1,8 +1,16 @@
+html, body {
+  margin: 0;
+  padding: 0;
+  height: 100%;
+}
+
 #root {
-  max-width: 1280px;
-  margin: 0 auto;
-  padding: 2rem;
-  text-align: center;
+  padding: 0;
+  max-width: none;
+  width: 100%;
+  margin: 0;
+  min-height: 100vh; /* Ensure root also takes full height */
+  height: 100%; /* Added height 100% */
 }
 
 .logo {
@@ -39,4 +47,255 @@
 
 .read-the-docs {
   color: #888;
+}
+
+/* App.css - Custom styles for dashboard layout and black theme */
+
+.dashboard-main {
+  display: flex;
+  height: 100vh;
+  background: #18181b;
+  color: #fff;
+  z-index: 10;
+}
+
+.dashboard-panel {
+  background: #23232a;
+  border-radius: 1rem;
+  box-shadow: 0 2px 16px 0 rgba(0,0,0,0.25);
+  padding: 1.5rem;
+  margin-bottom: 1.5rem;
+}
+
+.dashboard-panel h2 {
+  color: #fff;
+  font-size: 1.25rem;
+  font-weight: 600;
+  margin-bottom: 1rem;
+}
+
+@media (max-width: 900px) {
+  .dashboard-main {
+    flex-direction: column;
+  }
+  .dashboard-panel {
+    margin-bottom: 1rem;
+    padding: 1rem;
+  }
+}
+
+/* Utility classes for consistent look */
+.rounded-xl {
+  border-radius: 1rem;
+}
+.bg-dark {
+  background: #23232a;
+}
+.text-light {
+  color: #fff;
+}
+.shadow-lg {
+  box-shadow: 0 2px 16px 0 rgba(0,0,0,0.25);
+}
+
+/* Hide scrollbars for a cleaner look */
+::-webkit-scrollbar {
+  width: 8px;
+  background: #23232a;
+}
+::-webkit-scrollbar-thumb {
+  background: #18181b;
+  border-radius: 8px;
+}
+
+/* Ensure main content is a true two-column layout */
+main {
+  display: flex;
+  flex-direction: row;
+  width: 100%;
+}
+
+main > div:first-child {
+  width: 33%;
+}
+
+main > div:last-child {
+  width: 67%;
+}
+
+/* Root app container */
+.app-root {
+  min-height: 100vh;
+  background-color: #0a0a0a;
+  color: #fff;
+  display: flex;
+  flex-direction: column;
+  height: 100%; /* Added height 100% */
+}
+
+/* Header with main title */
+.app-header {
+  width: 100%;
+  padding: 0.5rem 0;
+  background: transparent;
+  text-align: center;
+  flex-shrink: 0;
+}
+
+.main-title {
+  font-size: 2.5rem;
+  font-weight: 800;
+  color: #fff;
+  letter-spacing: 1px;
+  margin: 0;
+}
+
+/* Dashboard layout - takes up remaining vertical space */
+.dashboard-layout {
+  flex-grow: 1;
+  padding: 1rem 1.5rem; /* Horizontal padding */
+  max-width: 2200px; /* Increased max-width for wider content */
+  width: 100%; /* Ensure it takes full width up to max-width */
+  margin: 0 auto;
+  /* Use margin-top to push content below fixed navbar */
+  margin-top: 100px; 
+  box-sizing: border-box; /* Include padding in the element's total width and height */
+  display: flex; /* Use flex to manage height of children (dashboard-main) */
+  flex-direction: column;
+  height: calc(100% - 100px); /* Calculate height based on margin-top */
+}
+
+.dashboard-main {
+  flex-grow: 1; /* Allow dashboard-main to fill remaining space */
+  display: grid;
+  grid-template-columns: 1fr 1fr;
+  gap: 1.5rem;
+  overflow: hidden; /* Hide potential overflow from grid items */
+  align-items: start;
+  height: 100%; /* Fill the height of its container */
+}
+
+.dashboard-left {
+  display: flex;
+  flex-direction: column;
+  gap: 1.5rem;
+  overflow-y: auto;
+  padding-right: 0.5rem; /* Keep padding for scrollbar */
+  height: 100%; /* Ensure it takes up full height in the grid item */
+}
+
+.dashboard-right {
+  background: #1a1a1a;
+  border-radius: 8px;
+  box-shadow: 0 2px 4px rgba(0, 0, 0, 0.3);
+  padding: 1rem;
+  border: 1px solid #2a2a2a;
+  overflow-y: auto;
+  height: 100%; /* Ensure it takes up full height in the grid item */
+}
+
+/* Component containers within dashboard-left */
+.dashboard-left > div {
+  background-color: #1a1a1a;
+  border-radius: 8px;
+  padding: 1.25rem;
+  box-shadow: 0 2px 4px rgba(0, 0, 0, 0.3);
+  border: 1px solid #2a2a2a;
+  min-height: fit-content;
+  flex-shrink: 0; /* Prevent shrinking */
+  flex-basis: auto; /* Allow items to size based on content */
+}
+
+/* Scrollbar styles */
+::-webkit-scrollbar {
+  width: 6px;
+  background: #1a1a1a;
+}
+
+::-webkit-scrollbar-thumb {
+  background: #2a2a2a;
+  border-radius: 3px;
+}
+
+::-webkit-scrollbar-thumb:hover {
+  background: #3a3a3a;
+}
+
+/* Hide scrollbars for a cleaner look */
+.dashboard-main::-webkit-scrollbar {
+  display: none;
+}
+
+.dashboard-main {
+  -ms-overflow-style: none;
+  scrollbar-width: none;
+}
+
+/* Component inner content scrollbars */
+.dashboard-left > div > div::-webkit-scrollbar,
+.dashboard-right > div::-webkit-scrollbar {
+  width: 6px;
+}
+
+.dashboard-left > div > div::-webkit-scrollbar-track,
+.dashboard-right > div::-webkit-scrollbar-track {
+  background: #1a1a1a;
+}
+
+.dashboard-left > div > div::-webkit-scrollbar-thumb,
+.dashboard-right > div::-webkit-scrollbar-thumb {
+  background: #2a2a2a;
+  border-radius: 3px;
+}
+
+.dashboard-left > div > div::-webkit-scrollbar-thumb:hover,
+.dashboard-right > div > div::-webkit-scrollbar-thumb:hover {
+  background: #3a3a3a;
+}
+
+/* Responsive design */
+@media (max-width: 1024px) {
+  .dashboard-layout {
+    padding: 1rem; /* Adjust padding for smaller screens */
+    margin-top: 90px; /* Ensure space below navbar on smaller screens */
+    height: calc(100% - 90px); /* Calculate height based on margin-top */
+  }
+  
+  .dashboard-main {
+    grid-template-columns: 1fr;
+    height: auto; /* Allow height to adjust based on content */
+  }
+  
+  .dashboard-right {
+    order: -1;
+    height: 400px; /* Fixed height for chat on smaller screens */
+  }
+
+  .dashboard-left {
+    overflow-y: visible;
+    padding-right: 0; /* Remove padding on mobile */
+    height: auto; /* Allow height to adjust based on content */
+  }
+
+  .dashboard-left > div {
+     flex-shrink: 0; /* Ensure consistent sizing */
+     flex-basis: auto;
+  }
+}
+
+@media (max-width: 768px) {
+  .dashboard-layout {
+    padding: 0.75rem; /* Further reduce padding for very small screens */
+    margin-top: 80px; /* Adjust margin-top for smaller screens */
+    height: calc(100% - 80px); /* Calculate height based on margin-top */
+  }
+
+  .dashboard-main {
+    grid-template-columns: 1fr;
+    gap: 1rem;
+  }
+
+  .dashboard-left {
+    gap: 1rem;
+  }
 }
