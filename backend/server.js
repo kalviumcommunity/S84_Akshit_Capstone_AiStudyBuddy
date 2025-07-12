@@ -33,6 +33,7 @@ const corsOptions = {
   origin: [
     'https://aistudybuddy.onrender.com',
     'http://localhost:5173',
+    'http://localhost:5174',
     'https://aistudybuddy.netlify.app'
   ],
   credentials: true,

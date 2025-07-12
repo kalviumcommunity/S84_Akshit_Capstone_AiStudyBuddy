@@ -1,5 +1,6 @@
 import React, { useState } from 'react';
 import { useNavigate } from 'react-router-dom';
+import { FaArrowLeft } from 'react-icons/fa';
 import { useAuth } from '../context/AuthContext';
 
 function Login() {
@@ -8,6 +9,14 @@ function Login() {
   const [error, setError] = useState('');
   const { login } = useAuth();
   const navigate = useNavigate();
+
+  const handleLogoClick = () => {
+    navigate('/');
+  };
+
+  const handleBackClick = () => {
+    navigate(-1);
+  };
 
   const handleSubmit = async (e) => {
     e.preventDefault();
@@ -25,7 +34,14 @@ function Login() {
     <div className="welcome-container auth-page">
       <div className="welcome-content">
         <header className="app-header">
-          <div className="app-logo">AI Study Buddy</div>
+          <button 
+            className="back-button-auth" 
+            onClick={handleBackClick}
+            title="Go Back"
+          >
+            <FaArrowLeft />
+          </button>
+          <div className="app-logo" onClick={handleLogoClick} style={{ cursor: 'pointer' }}>AI Study Buddy</div>
           <div className="auth-buttons">
             <button className="glowing-btn" onClick={() => navigate('/register')}>
               Signup

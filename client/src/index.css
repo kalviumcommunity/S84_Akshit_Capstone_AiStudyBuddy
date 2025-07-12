@@ -83,6 +83,32 @@ body {
   height: 80px;
 }
 
+.back-button-auth {
+  position: absolute;
+  left: 2rem;
+  top: 50%;
+  transform: translateY(-50%);
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  width: 40px;
+  height: 40px;
+  border-radius: 50%;
+  background-color: #1a1a1a;
+  border: 1px solid #333;
+  color: #fff;
+  cursor: pointer;
+  transition: all 0.3s ease;
+  font-size: 1.2rem;
+  z-index: 15;
+}
+
+.back-button-auth:hover {
+  background-color: #2a2a2a;
+  border-color: #444;
+  transform: translateY(-50%) translateX(-2px);
+}
+
 .app-logo {
   font-size: 2.2rem;
   font-weight: 700;
