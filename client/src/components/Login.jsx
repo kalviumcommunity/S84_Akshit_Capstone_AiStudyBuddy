@@ -20,7 +20,7 @@ function Login() {
   };
 
   return (
-    <div className="welcome-container">
+    <div className="welcome-container auth-page">
       <div className="welcome-content">
         <header className="app-header">
           <div className="app-logo">AI Study Buddy</div>

@@ -38,7 +38,7 @@ const Register = () => {
   };
 
   return (
-    <div className="register-container">
+    <div className="register-container auth-page">
       <div className="register-content">
         <header className="app-header">
           <div className="app-logo">AI Study Buddy</div>
