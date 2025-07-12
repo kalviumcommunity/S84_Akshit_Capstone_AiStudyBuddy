@@ -1,14 +1,23 @@
 import React, { useState, useRef, useEffect } from 'react';
-import { Link, useLocation } from 'react-router-dom';
-import { FaHome, FaBook, FaHistory, FaUser, FaSignOutAlt } from 'react-icons/fa';
+import { Link, useLocation, useNavigate } from 'react-router-dom';
+import { FaHome, FaBook, FaHistory, FaUser, FaSignOutAlt, FaArrowLeft } from 'react-icons/fa';
 import { useAuth } from '../context/AuthContext';
 import './Navbar.css';
 
 function Navbar() {
   const location = useLocation();
+  const navigate = useNavigate();
   const { logout, user } = useAuth();
   const [showProfileMenu, setShowProfileMenu] = useState(false);
   const profileMenuRef = useRef(null);
+
+  const handleLogoClick = () => {
+    navigate('/');
+  };
+
+  const handleBackClick = () => {
+    navigate(-1);
+  };
 
   const navItems = [
     { path: '/', icon: <FaHome />, label: 'Home' },
@@ -37,7 +46,14 @@ function Navbar() {
   return (
     <nav className="navbar">
       <div className="navbar-left">
-        <h1 className="navbar-title">AI Study Buddy</h1>
+        <button 
+          className="nav-icon back-button" 
+          onClick={handleBackClick}
+          title="Go Back"
+        >
+          <FaArrowLeft />
+        </button>
+        <h1 className="navbar-title" onClick={handleLogoClick} style={{ cursor: 'pointer' }}>AI Study Buddy</h1>
         <div className="nav-icons">
           {navItems.map((item) => (
             <Link

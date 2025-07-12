@@ -5,11 +5,15 @@ import './Welcome.css';
 function Welcome() {
   const navigate = useNavigate();
 
+  const handleLogoClick = () => {
+    navigate('/');
+  };
+
   return (
     <div className="welcome-container">
       <div className="welcome-content">
         <header className="app-header">
-          <div className="app-logo">AI Study Buddy</div>
+          <div className="app-logo" onClick={handleLogoClick} style={{ cursor: 'pointer' }}>AI Study Buddy</div>
           <div className="auth-buttons">
             <button className="glowing-btn" onClick={() => navigate('/login')}>
               Login
