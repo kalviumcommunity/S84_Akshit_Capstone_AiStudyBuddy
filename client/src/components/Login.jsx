@@ -11,6 +11,8 @@ function Login() {
 
   const handleSubmit = async (e) => {
     e.preventDefault();
+    setError('');
+    
     try {
       await login(email, password);
       navigate('/chat');
