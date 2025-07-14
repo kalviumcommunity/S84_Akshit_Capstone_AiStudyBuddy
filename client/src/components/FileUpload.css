@@ -4,6 +4,18 @@
   padding: 1.5rem;
   box-shadow: 0 2px 4px rgba(0, 0, 0, 0.3);
   border: 1px solid #2a2a2a;
+  animation: fadeIn 0.6s ease-in-out;
+}
+
+@keyframes fadeIn {
+  from {
+    opacity: 0;
+    transform: translateY(20px);
+  }
+  to {
+    opacity: 1;
+    transform: translateY(0);
+  }
 }
 
 .file-upload-title {
@@ -11,6 +23,18 @@
   font-size: 1.25rem;
   font-weight: 600;
   margin-bottom: 1.5rem;
+  animation: slideInLeft 0.8s ease-out;
+}
+
+@keyframes slideInLeft {
+  from {
+    opacity: 0;
+    transform: translateX(-30px);
+  }
+  to {
+    opacity: 1;
+    transform: translateX(0);
+  }
 }
 
 .upload-area {
@@ -21,26 +45,80 @@
   cursor: pointer;
   transition: all 0.3s ease;
   background-color: #0a0a0a;
+  animation: pulse 2s infinite;
+  position: relative;
+  overflow: hidden;
+}
+
+@keyframes pulse {
+  0% {
+    box-shadow: 0 0 0 0 rgba(42, 42, 42, 0.4);
+  }
+  70% {
+    box-shadow: 0 0 0 10px rgba(42, 42, 42, 0);
+  }
+  100% {
+    box-shadow: 0 0 0 0 rgba(42, 42, 42, 0);
+  }
 }
 
 .upload-area:hover {
   border-color: #3a3a3a;
   background-color: #1a1a1a;
+  transform: scale(1.02);
+  animation: none;
 }
 
 .upload-area.dragging {
   border-color: #3a3a3a;
   background-color: #1a1a1a;
+  transform: scale(1.05);
+  animation: dragPulse 0.5s ease-in-out;
+}
+
+@keyframes dragPulse {
+  0% {
+    transform: scale(1.05);
+  }
+  50% {
+    transform: scale(1.08);
+  }
+  100% {
+    transform: scale(1.05);
+  }
 }
 
 .upload-icon {
   font-size: 2.5rem;
   margin-bottom: 1rem;
   color: #888;
+  animation: float 3s ease-in-out infinite;
+  display: inline-block;
+}
+
+@keyframes float {
+  0%, 100% {
+    transform: translateY(0px);
+  }
+  50% {
+    transform: translateY(-10px);
+  }
 }
 
 .upload-text {
   color: #888;
+  animation: fadeInUp 1s ease-out 0.3s both;
+}
+
+@keyframes fadeInUp {
+  from {
+    opacity: 0;
+    transform: translateY(20px);
+  }
+  to {
+    opacity: 1;
+    transform: translateY(0);
+  }
 }
 
 .upload-text-primary {
@@ -54,6 +132,18 @@
 
 .file-list {
   margin-top: 1rem;
+  animation: slideInUp 0.5s ease-out;
+}
+
+@keyframes slideInUp {
+  from {
+    opacity: 0;
+    transform: translateY(20px);
+  }
+  to {
+    opacity: 1;
+    transform: translateY(0);
+  }
 }
 
 .file-item {
@@ -65,6 +155,31 @@
   border-radius: 6px;
   margin-bottom: 0.5rem;
   border: 1px solid #2a2a2a;
+  animation: bounceIn 0.6s ease-out;
+  transition: all 0.3s ease;
+}
+
+@keyframes bounceIn {
+  0% {
+    opacity: 0;
+    transform: scale(0.3);
+  }
+  50% {
+    opacity: 1;
+    transform: scale(1.05);
+  }
+  70% {
+    transform: scale(0.9);
+  }
+  100% {
+    opacity: 1;
+    transform: scale(1);
+  }
+}
+
+.file-item:hover {
+  transform: translateX(5px);
+  border-color: #3a3a3a;
 }
 
 .file-name {
@@ -81,11 +196,19 @@
   cursor: pointer;
   padding: 0.25rem;
   line-height: 1;
-  transition: color 0.3s ease;
+  transition: all 0.3s ease;
+  border-radius: 50%;
+  width: 24px;
+  height: 24px;
+  display: flex;
+  align-items: center;
+  justify-content: center;
 }
 
 .file-remove:hover {
   color: #fff;
+  background-color: rgba(255, 77, 77, 0.2);
+  transform: rotate(90deg);
 }
 
 .error-message {
@@ -96,6 +219,19 @@
   background-color: rgba(255, 77, 77, 0.1);
   border-radius: 6px;
   border: 1px solid rgba(255, 77, 77, 0.2);
+  animation: shake 0.5s ease-in-out;
+}
+
+@keyframes shake {
+  0%, 100% {
+    transform: translateX(0);
+  }
+  10%, 30%, 50%, 70%, 90% {
+    transform: translateX(-5px);
+  }
+  20%, 40%, 60%, 80% {
+    transform: translateX(5px);
+  }
 }
 
 .upload-button {
@@ -109,10 +245,29 @@
   cursor: pointer;
   transition: all 0.3s ease;
   margin-top: 1rem;
+  position: relative;
+  overflow: hidden;
+}
+
+.upload-button::before {
+  content: '';
+  position: absolute;
+  top: 0;
+  left: -100%;
+  width: 100%;
+  height: 100%;
+  background: linear-gradient(90deg, transparent, rgba(255, 255, 255, 0.1), transparent);
+  transition: left 0.5s;
+}
+
+.upload-button:hover::before {
+  left: 100%;
 }
 
 .upload-button:hover:not(:disabled) {
   background-color: #3a3a3a;
+  transform: translateY(-2px);
+  box-shadow: 0 4px 8px rgba(0, 0, 0, 0.3);
 }
 
 .upload-button:disabled {
