@@ -1,5 +1,6 @@
 import React from 'react';
 import { useNavigate } from 'react-router-dom';
+import ThemeToggle from './ThemeToggle';
 import './Welcome.css';
 
 function Welcome() {
@@ -15,6 +16,7 @@ function Welcome() {
         <header className="app-header">
           <div className="app-logo" onClick={handleLogoClick} style={{ cursor: 'pointer' }}>AI Study Buddy</div>
           <div className="auth-buttons">
+            <ThemeToggle />
             <button className="glowing-btn" onClick={() => navigate('/login')}>
               Login
               <span className="glow-container">

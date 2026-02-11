@@ -25,7 +25,8 @@ mongoose.connect(MONGO_URI)
   .then(() => console.log('Connected to MongoDB'))
   .catch(err => {
     console.error('Could not connect to MongoDB:', err);
-    process.exit(1);
+    console.log('Server will continue running without MongoDB connection...');
+    // Don't exit the process, allow server to run for testing
   });
 
 // CORS configuration
@@ -45,9 +46,6 @@ const corsOptions = {
 app.use(express.json());
 app.use(cors(corsOptions)); // <-- Handles all CORS including OPTIONS preflight
 
-// Serve uploaded files
-app.use('/uploads', express.static(path.join(__dirname, 'uploads')));
-
 // Import routes
 const uploadRoutes = require('./routes/upload');
 const sessionRoutes = require('./routes/sessionRoutes');
@@ -55,6 +53,8 @@ const noteRoutes = require('./routes/noteRoutes');
 const videoRoutes = require('./routes/videoRoutes');
 const putRoutes = require('./routes/putRoutes');
 const userRoutes = require('./routes/userRoutes');
+const chatRoutes = require('./routes/chatRoutes');
+const aiRoutes = require('./routes/aiRoutes');
 
 // Home route
 app.get('/', (req, res) => {
@@ -67,7 +67,9 @@ app.get('/', (req, res) => {
       sessions: '/api/sessions',
       notes: '/api/notes',
       videos: '/api/videos',
-      upload: '/api/upload'
+      upload: '/api/upload',
+      chat: '/api/chat',
+      ai: '/api/ai'
     }
   });
 });
@@ -78,6 +80,8 @@ app.use('/api/sessions', sessionRoutes);
 app.use('/api/notes', noteRoutes);
 app.use('/api/videos', videoRoutes);
 app.use('/api/upload', uploadRoutes);
+app.use('/api', chatRoutes);
+app.use('/api/ai', aiRoutes);
 
 // Error handling middleware
 app.use((err, req, res, next) => {
@@ -100,7 +104,6 @@ app.use((req, res) => {
 const PORT = process.env.PORT || 5000;
 
 app.listen(PORT, () => {
-  console.log('Uploads directory:', path.join(__dirname, 'uploads'));
   console.log(`Server is running on port ${PORT}🚀`);
   console.log('Available routes:');
   console.log('- /api/users');
@@ -108,4 +111,6 @@ app.listen(PORT, () => {
   console.log('- /api/notes');
   console.log('- /api/videos');
   console.log('- /api/upload');
+  console.log('- /api/chat');
+  console.log('- /api/ai');
 });

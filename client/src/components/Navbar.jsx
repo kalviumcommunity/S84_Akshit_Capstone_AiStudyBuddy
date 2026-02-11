@@ -1,10 +1,11 @@
 import React, { useState, useRef, useEffect } from 'react';
 import { Link, useLocation, useNavigate } from 'react-router-dom';
-import { FaHome, FaBook, FaHistory, FaUser, FaSignOutAlt, FaArrowLeft } from 'react-icons/fa';
+import { FaHome, FaBook, FaHistory, FaUser, FaSignOutAlt, FaArrowLeft, FaBars } from 'react-icons/fa';
 import { useAuth } from '../context/AuthContext';
+import ThemeToggle from './ThemeToggle';
 import './Navbar.css';
 
-function Navbar() {
+function Navbar({ onSidebarToggle, showBackButton = true }) {
   const location = useLocation();
   const navigate = useNavigate();
   const { logout, user } = useAuth();
@@ -46,13 +47,23 @@ function Navbar() {
   return (
     <nav className="navbar">
       <div className="navbar-left">
-        <button 
-          className="nav-icon back-button" 
-          onClick={handleBackClick}
-          title="Go Back"
-        >
-          <FaArrowLeft />
-        </button>
+        {onSidebarToggle ? (
+          <button 
+            className="nav-icon sidebar-toggle-btn" 
+            onClick={onSidebarToggle}
+            title="Toggle Sidebar"
+          >
+            <FaBars />
+          </button>
+        ) : showBackButton && (
+          <button 
+            className="nav-icon back-button" 
+            onClick={handleBackClick}
+            title="Go Back"
+          >
+            <FaArrowLeft />
+          </button>
+        )}
         <h1 className="navbar-title" onClick={handleLogoClick} style={{ cursor: 'pointer' }}>AI Study Buddy</h1>
         <div className="nav-icons">
           {navItems.map((item) => (
@@ -69,6 +80,7 @@ function Navbar() {
       </div>
 
       <div className="navbar-right">
+        <ThemeToggle />
         <div className="profile-container" ref={profileMenuRef}>
           <button 
             className="nav-icon profile-icon" 
