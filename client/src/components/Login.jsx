@@ -2,6 +2,7 @@ import React, { useState } from 'react';
 import { useNavigate } from 'react-router-dom';
 import { FaArrowLeft } from 'react-icons/fa';
 import { useAuth } from '../context/AuthContext';
+import ThemeToggle from './ThemeToggle';
 
 function Login() {
   const [email, setEmail] = useState('');
@@ -43,6 +44,7 @@ function Login() {
           </button>
           <div className="app-logo" onClick={handleLogoClick} style={{ cursor: 'pointer' }}>AI Study Buddy</div>
           <div className="auth-buttons">
+            <ThemeToggle />
             <button className="glowing-btn" onClick={() => navigate('/register')}>
               Signup
               <span className="glow-container">

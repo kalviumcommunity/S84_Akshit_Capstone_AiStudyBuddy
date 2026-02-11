@@ -39,6 +39,12 @@ body {
   overflow-y: auto !important;
   overflow-x: hidden;
   position: relative;
+  transition: background-color 0.3s ease, color 0.3s ease;
+}
+
+.light-theme .welcome-container {
+  background-color: #f8f9fa;
+  color: #212529;
 }
 
 .welcome-content {
@@ -94,6 +100,11 @@ body {
   line-height: 1;
   display: flex;
   align-items: center;
+  transition: color 0.3s ease;
+}
+
+.light-theme .welcome-container .logo {
+  color: #212529;
 }
 
 .welcome-container .auth-buttons {
@@ -111,8 +122,8 @@ body {
 .welcome-container .auth-buttons button.glowing-btn {
   position: relative;
   padding: 0.8rem 2rem;
-  border: 2px solid transparent;
-  background: transparent;
+  border: 2px solid rgba(255, 255, 255, 0.3);
+  background: rgba(255, 255, 255, 0.1);
   color: #fff;
   font-weight: 600;
   font-size: 1.1rem;
@@ -120,7 +131,7 @@ body {
   border-radius: 50px / 25px;
   overflow: hidden;
   user-select: none;
-  transition: color 0.3s ease;
+  transition: all 0.3s ease;
   z-index: 1;
   white-space: nowrap;
   display: inline-flex;
@@ -128,6 +139,12 @@ body {
   justify-content: center;
   height: 45px;
   line-height: 1;
+}
+
+.light-theme .welcome-container .auth-buttons button.glowing-btn {
+  color: #212529;
+  border: 2px solid rgba(0, 0, 0, 0.3);
+  background: rgba(0, 0, 0, 0.05);
 }
 
 .welcome-container .auth-buttons button.glowing-btn::before {
@@ -148,6 +165,14 @@ body {
 
 .welcome-container .auth-buttons button.glowing-btn:hover {
   color: #fff;
+  background: rgba(255, 255, 255, 0.2);
+  border-color: rgba(255, 255, 255, 0.5);
+}
+
+.light-theme .welcome-container .auth-buttons button.glowing-btn:hover {
+  color: #212529;
+  background: rgba(0, 0, 0, 0.1);
+  border-color: rgba(0, 0, 0, 0.5);
 }
 
 .welcome-container .auth-buttons button.glowing-btn .glow-container {
@@ -229,6 +254,11 @@ body {
   max-width: 1000px;
   margin-bottom: 4rem;
   line-height: 1.6;
+  transition: color 0.3s ease;
+}
+
+.light-theme .welcome-container .main-section p {
+  color: #6c757d;
 }
 
 /* Try AI Study Buddy CTA Button */
@@ -237,16 +267,22 @@ body {
   font-size: 1.5rem;
   font-weight: 600;
   padding: 1.2rem 6rem;
-  background: #000;
+  background: rgba(255, 255, 255, 0.1);
   color: #fff;
-  border: 2px solid transparent;
+  border: 2px solid rgba(255, 255, 255, 0.3);
   border-radius: 50px / 25px;
   cursor: pointer;
   overflow: hidden;
   z-index: 1;
   user-select: none;
   letter-spacing: 1px;
-  transition: background-color 0.3s ease, border-color 0.3s ease;
+  transition: all 0.3s ease;
+}
+
+.light-theme .welcome-container .cta-button {
+  color: #212529;
+  background: rgba(0, 0, 0, 0.05);
+  border: 2px solid rgba(0, 0, 0, 0.3);
 }
 
 .welcome-container .cta-button .glow-container {
@@ -291,8 +327,14 @@ body {
 
 .welcome-container .cta-button:hover {
   color: #fff;
-  background: #111;
-  border-color: white;
+  background: rgba(255, 255, 255, 0.2);
+  border-color: rgba(255, 255, 255, 0.5);
+}
+
+.light-theme .welcome-container .cta-button:hover {
+  color: #212529;
+  background: rgba(0, 0, 0, 0.1);
+  border-color: rgba(0, 0, 0, 0.5);
 }
 
 /* Responsive adjustments */

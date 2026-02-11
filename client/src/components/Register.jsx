@@ -2,6 +2,7 @@ import { useState } from 'react';
 import { useAuth } from '../context/AuthContext';
 import { useNavigate, Link } from 'react-router-dom';
 import { FaArrowLeft } from 'react-icons/fa';
+import ThemeToggle from './ThemeToggle';
 import '../Register.css';
 
 const Register = () => {
@@ -59,6 +60,7 @@ const Register = () => {
           </button>
           <div className="app-logo" onClick={handleLogoClick} style={{ cursor: 'pointer' }}>AI Study Buddy</div>
           <div className="auth-buttons">
+            <ThemeToggle />
             <button className="glowing-btn" onClick={() => navigate('/login')}>
               Login
               <span className="glow-container">

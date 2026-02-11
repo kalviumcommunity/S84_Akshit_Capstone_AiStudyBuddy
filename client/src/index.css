@@ -23,6 +23,13 @@ body {
   background-color: #0e0e0e;
   color: #fff;
   overflow-y: auto;
+  transition: background-color 0.3s ease, color 0.3s ease;
+}
+
+/* Light theme overrides */
+.light-theme body {
+  background-color: #f8f9fa;
+  color: #212529;
 }
 
 #root {
@@ -43,6 +50,11 @@ body {
   background: #0e0e0e;
   scroll-behavior: smooth;
   position: relative;
+  transition: background-color 0.3s ease;
+}
+
+.light-theme .auth-page {
+  background: #f8f9fa;
 }
 
 .auth-page .welcome-container,
@@ -118,6 +130,11 @@ body {
   flex: 1;
   justify-content: flex-start;
   margin: 0;
+  transition: color 0.3s ease;
+}
+
+.light-theme .app-logo {
+  color: #212529;
 }
 
 .auth-buttons {
@@ -135,8 +152,8 @@ body {
 .glowing-btn {
   position: relative;
   padding: 0.8rem 2rem;
-  border: 2px solid transparent;
-  background: transparent;
+  border: 2px solid rgba(255, 255, 255, 0.3);
+  background: rgba(255, 255, 255, 0.1);
   color: #fff;
   font-weight: 600;
   font-size: 1.1rem;
@@ -144,7 +161,7 @@ body {
   border-radius: 50px / 25px;
   overflow: hidden;
   user-select: none;
-  transition: color 0.3s ease;
+  transition: all 0.3s ease;
   z-index: 1;
   white-space: nowrap;
   display: inline-flex;
@@ -152,6 +169,12 @@ body {
   justify-content: center;
   height: 45px;
   line-height: 1;
+}
+
+.light-theme .glowing-btn {
+  color: #212529;
+  border: 2px solid rgba(0, 0, 0, 0.3);
+  background: rgba(0, 0, 0, 0.05);
 }
 
 .glowing-btn::before {
@@ -172,6 +195,14 @@ body {
 
 .glowing-btn:hover {
   color: #fff;
+  background: rgba(255, 255, 255, 0.2);
+  border-color: rgba(255, 255, 255, 0.5);
+}
+
+.light-theme .glowing-btn:hover {
+  color: #212529;
+  background: rgba(0, 0, 0, 0.1);
+  border-color: rgba(0, 0, 0, 0.5);
 }
 
 .glowing-btn .glow-container {
@@ -290,6 +321,11 @@ body {
   background: rgba(255, 255, 255, 0.05);
   border-radius: 10px;
   backdrop-filter: blur(10px);
+  transition: background-color 0.3s ease;
+}
+
+.light-theme .auth-form {
+  background: rgba(0, 0, 0, 0.05);
 }
 
 .form-group {
@@ -307,14 +343,29 @@ body {
   transition: all 0.3s ease;
 }
 
+.light-theme .form-group input {
+  background: rgba(0, 0, 0, 0.1);
+  border: 1px solid rgba(0, 0, 0, 0.2);
+  color: #212529;
+}
+
 .form-group input:focus {
   outline: none;
   border-color: rgba(255, 255, 255, 0.5);
   background: rgba(255, 255, 255, 0.15);
 }
 
+.light-theme .form-group input:focus {
+  border-color: rgba(0, 0, 0, 0.5);
+  background: rgba(0, 0, 0, 0.15);
+}
+
 .form-group input::placeholder {
   color: rgba(255, 255, 255, 0.5);
+}
+
+.light-theme .form-group input::placeholder {
+  color: rgba(0, 0, 0, 0.5);
 }
 
 .error-message {

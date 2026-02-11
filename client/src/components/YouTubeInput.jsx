@@ -112,7 +112,15 @@ function YouTubeInput() {
 
   return (
     <div className="youtube-container">
-      <h2 className="youtube-title">YouTube Video</h2>
+      <div className="youtube-header">
+        <h2 className="youtube-title">
+          <span className="title-icon">📺</span>
+          <span className="youtube-title-text">YouTube Video Analysis</span>
+        </h2>
+        <p className="youtube-subtitle">
+          Paste a YouTube URL and get AI-powered summaries
+        </p>
+      </div>
       <form onSubmit={handleSubmit} className="youtube-form">
         <div className="youtube-form-container">
           <input
