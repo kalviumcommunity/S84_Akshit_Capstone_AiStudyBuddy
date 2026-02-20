@@ -3,6 +3,7 @@ import { useNavigate } from 'react-router-dom';
 import { FaArrowLeft } from 'react-icons/fa';
 import { useAuth } from '../context/AuthContext';
 import ThemeToggle from './ThemeToggle';
+import StarBackground from './StarBackground';
 
 function Login() {
   const [email, setEmail] = useState('');
@@ -33,6 +34,7 @@ function Login() {
 
   return (
     <div className="welcome-container auth-page">
+      <StarBackground showMeteors={false} />
       <div className="welcome-content">
         <header className="app-header">
           <button 

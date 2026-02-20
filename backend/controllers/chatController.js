@@ -33,27 +33,19 @@ const chatWithAI = async (req, res) => {
       },
     });
 
-    // Enhanced prompt for more detailed responses
-    const enhancedPrompt = `You are an expert AI study assistant and tutor. Your role is to provide comprehensive, detailed, and educational responses that help students learn effectively.
+    // Enhanced prompt that adapts to the type of message
+    const enhancedPrompt = `You are a friendly AI study assistant. Respond naturally based on what the user says.
 
-User's question: ${message}
+User's message: ${message}
 
-Instructions for your response:
-- Provide thorough, detailed explanations that cover all important aspects of the topic
-- For technical topics (like OSI model, networking, programming, etc.), include:
-  * Complete definitions and explanations
-  * All relevant components, layers, or parts
-  * Examples and real-world applications
-  * Step-by-step breakdowns when appropriate
-- Use clear, educational language that's easy to understand
-- Structure your response with proper organization (use headings, bullet points, or numbered lists when helpful)
-- Include practical examples and analogies to make concepts clearer
-- Provide additional context that enhances understanding
-- Be conversational but comprehensive
-- Avoid excessive markdown formatting, but use basic formatting for clarity
-- If the topic has multiple parts or layers (like OSI model's 7 layers), make sure to cover ALL of them in detail
+IMPORTANT RULES:
+- If the user says "hi", "hello", "hey" or similar greetings, respond with ONLY 1-2 short sentences like "Hi! How can I help you with your studies today?" or "Hello! What would you like to learn about?"
+- For simple questions, give brief, direct answers (2-3 sentences max)
+- ONLY provide detailed explanations when the user explicitly asks to "explain", "describe in detail", or asks complex academic questions
+- Keep responses SHORT unless detail is specifically requested
+- Be friendly but concise
 
-Please provide a comprehensive, educational response that thoroughly addresses the question:`;
+Respond now:`;
 
     // Send message and get response
     const result = await chat.sendMessage(enhancedPrompt);
@@ -111,36 +103,32 @@ const chatWithContext = async (req, res) => {
     // Prepare the prompt with context
     let prompt = message;
     if (context && context.trim()) {
-      prompt = `You are an expert AI study assistant. Please provide a comprehensive, detailed response based on the context provided.
+      prompt = `You are a friendly AI study assistant. Answer based on the context provided.
 
 Context: ${context}
 
 Student's question: ${message}
 
-Instructions:
-- Provide thorough explanations that fully address the question
-- Use the context to give specific, detailed answers
-- Include examples and practical applications when relevant
-- Structure your response clearly with proper organization
-- Be educational and comprehensive
-- If the context contains technical information, explain it in detail
-- Make connections between different concepts when appropriate
+RULES:
+- Keep answers concise unless detail is requested
+- Use the context to give accurate answers
+- Only elaborate when the question requires it
+- Be clear and direct
 
-Please provide a detailed, educational response:`;
+Respond now:`;
     } else {
-      prompt = `You are an expert AI study assistant and tutor. Please provide a comprehensive, detailed, and educational response.
+      prompt = `You are a friendly AI study assistant. Respond naturally based on what the user says.
 
-Student's question: ${message}
+Student's message: ${message}
 
-Instructions:
-- Provide thorough, detailed explanations that cover all important aspects
-- For technical topics, include complete definitions, components, and examples
-- Use clear, educational language with proper structure
-- Include practical examples and real-world applications
-- Be comprehensive and educational
-- Cover all relevant parts of the topic (e.g., if asked about OSI model, cover all 7 layers in detail)
+IMPORTANT RULES:
+- If it's a greeting (hi, hello, hey), respond with ONLY 1-2 short sentences
+- For simple questions, give brief answers (2-3 sentences max)
+- ONLY provide detailed explanations when explicitly asked to "explain", "describe", or for complex academic questions
+- Keep responses SHORT unless detail is requested
+- Be friendly but concise
 
-Please provide a comprehensive response:`;
+Respond now:`;
     }
 
     // Generate response

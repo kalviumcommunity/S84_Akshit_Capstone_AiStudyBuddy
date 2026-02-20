@@ -4,6 +4,10 @@
   justify-content: center;
   width: 40px;
   height: 40px;
+  min-width: 40px;
+  min-height: 40px;
+  max-width: 40px;
+  max-height: 40px;
   border-radius: 50%;
   background: none;
   border: none;
@@ -12,6 +16,8 @@
   transition: all 0.3s ease;
   position: relative;
   overflow: hidden;
+  padding: 0;
+  flex-shrink: 0;
 }
 
 .theme-toggle:hover {

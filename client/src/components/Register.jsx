@@ -3,6 +3,7 @@ import { useAuth } from '../context/AuthContext';
 import { useNavigate, Link } from 'react-router-dom';
 import { FaArrowLeft } from 'react-icons/fa';
 import ThemeToggle from './ThemeToggle';
+import StarBackground from './StarBackground';
 import '../Register.css';
 
 const Register = () => {
@@ -49,6 +50,7 @@ const Register = () => {
 
   return (
     <div className="register-container auth-page">
+      <StarBackground showMeteors={false} />
       <div className="register-content">
         <header className="app-header">
           <button 
