@@ -211,9 +211,6 @@ function Chat() {
         <div className="chat-messages">
           {messages.map((message, index) => (
             <div key={index} className={`message ${message.role}`}>
-              <div className="message-avatar">
-                {message.role === 'user' ? '👤' : '🤖'}
-              </div>
               <div className="message-content">
                 {message.isFile ? (
                   <div className="file-message">
@@ -252,7 +249,6 @@ function Chat() {
           
           {(loading || uploading) && (
             <div className="message assistant">
-              <div className="message-avatar">🤖</div>
               <div className="message-content">
                 <LoadingDots 
                   text={uploading ? "Processing your file" : "AI is thinking"} 

@@ -28,10 +28,10 @@
   flex-direction: column;
   width: 100%;
   min-height: 90vh;
-  justify-content: center;
+  justify-content: flex-start;
   align-items: center;
   padding: 2rem;
-  padding-bottom: 6rem;
+  padding-bottom: 8rem;
   box-sizing: border-box;
   position: relative;
 }
@@ -113,7 +113,8 @@
 
 .chat-messages {
   flex: 1;
-  overflow: visible;
+  overflow-y: auto;
+  overflow-x: hidden;
   padding: 1.5rem;
   display: flex;
   flex-direction: column;
@@ -121,11 +122,12 @@
   background: transparent;
   border-radius: 0;
   border: none;
-  margin-bottom: 1.5rem;
+  margin-bottom: 2rem;
   transition: all 0.3s ease;
   min-height: 300px;
   width: 100%;
   position: relative;
+  padding-bottom: 2rem;
 }
 
 .light-theme .chat-messages {

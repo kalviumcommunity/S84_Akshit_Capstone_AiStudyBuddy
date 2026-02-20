@@ -3,8 +3,7 @@ import { Routes, Route, Navigate } from 'react-router-dom';
 import { AuthProvider } from './context/AuthContext';
 import { LoadingProvider } from './context/LoadingContext';
 import { ThemeProvider } from './context/ThemeContext';
-import Login from './components/Login';
-import Register from './components/Register';
+import Auth from './components/Auth';
 import ProtectedRoute from './components/ProtectedRoute';
 import Welcome from './components/Welcome';
 import Navbar from './components/Navbar';
@@ -91,9 +90,10 @@ function AppContent() {
     <Routes>
       {/* Welcome page */}
       <Route path="/" element={<Welcome />} />
-      {/* Public routes */}
-      <Route path="/login" element={<Login />} />
-      <Route path="/register" element={<Register />} />
+      {/* Public routes - unified auth page */}
+      <Route path="/login" element={<Auth />} />
+      <Route path="/register" element={<Auth />} />
+      <Route path="/auth" element={<Auth />} />
       {/* Protected dashboard routes */}
       <Route
         path="/chat"
