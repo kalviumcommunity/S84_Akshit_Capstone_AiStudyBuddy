@@ -1,9 +1,13 @@
 const { GoogleGenerativeAI } = require('@google/generative-ai');
 const cloudinary = require('../config/cloudinary');
 const fetch = require('node-fetch');
+const apiKeyManager = require('../utils/apiKeyManager');
 
-// Initialize Gemini AI
-const genAI = new GoogleGenerativeAI(process.env.GEMINI_API_KEY);
+// Initialize Gemini AI with key rotation
+function getGenAI() {
+  const apiKey = apiKeyManager.getNextKey();
+  return new GoogleGenerativeAI(apiKey);
+}
 
 // Helper function to convert image URL to base64
 const getImageFromUrl = async (imageUrl) => {
@@ -32,7 +36,8 @@ const analyzeImage = async (req, res) => {
     console.log('Starting image analysis for:', publicId || imageUrl);
 
     // Get the generative model
-    const model = genAI.getGenerativeModel({ model: "gemini-2.5-flash" });
+    const genAI = getGenAI();
+    const model = genAI.getGenerativeModel({ model: "gemini-3-flash-preview" });
 
     // Convert image URL to base64
     const imageBase64 = await getImageFromUrl(imageUrl);
@@ -75,7 +80,7 @@ const analyzeImage = async (req, res) => {
         imageUrl: imageUrl,
         summary: summary,
         analyzedAt: new Date().toISOString(),
-        aiModel: 'gemini-2.5-flash'
+        aiModel: 'gemini-3-flash-preview'
       }
     });
 
@@ -102,7 +107,8 @@ const analyzeMultipleImages = async (req, res) => {
 
     console.log(`Starting batch analysis for ${images.length} images`);
 
-    const model = genAI.getGenerativeModel({ model: "gemini-2.5-flash" });
+    const genAI = getGenAI();
+    const model = genAI.getGenerativeModel({ model: "gemini-3-flash-preview" });
     const results = [];
 
     // Process each image
@@ -181,7 +187,8 @@ const extractTextFromImage = async (req, res) => {
 
     console.log('Starting text extraction for:', publicId || imageUrl);
 
-    const model = genAI.getGenerativeModel({ model: "gemini-2.5-flash" });
+    const genAI = getGenAI();
+    const model = genAI.getGenerativeModel({ model: "gemini-3-flash-preview" });
     const imageBase64 = await getImageFromUrl(imageUrl);
 
     const prompt = `
@@ -216,7 +223,7 @@ const extractTextFromImage = async (req, res) => {
         imageUrl: imageUrl,
         extractedText: extractedText,
         extractedAt: new Date().toISOString(),
-        aiModel: 'gemini-2.5-flash'
+        aiModel: 'gemini-3-flash-preview'
       }
     });
 

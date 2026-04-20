@@ -7,13 +7,21 @@ import './Chat.css';
 function Chat() {
   const { user } = useAuth();
   const [messages, setMessages] = useState([
-    { role: 'assistant', content: 'Welcome to AI Study Buddy! 🎓\n\nI can help you with:\n• Analyzing documents and images you upload\n• Summarizing YouTube videos\n• Answering questions about your study materials\n• General academic assistance\n\nJust type a message, click the + button to upload files, or paste a YouTube URL to get started!' }
+    { role: 'assistant', content: 'Welcome to AI Study Buddy! 🎓\n\nI can help you with:\n• Analyzing documents and images you upload\n• Summarizing YouTube videos\n• Getting YouTube video transcripts or lyrics (just add "transcript only" or "lyrics only" after the URL)\n• Answering questions about your study materials\n• General academic assistance\n\nJust type a message, click the + button to upload files, or paste a YouTube URL to get started!' }
   ]);
   const [input, setInput] = useState('');
   const [loading, setLoading] = useState(false);
   const [error, setError] = useState('');
   const [showUploadMenu, setShowUploadMenu] = useState(false);
   const [uploading, setUploading] = useState(false);
+  
+  // NEW: RAG-related state
+  const [currentNoteId, setCurrentNoteId] = useState(null);
+  const [uploadedNotes, setUploadedNotes] = useState([]);
+  
+  // NEW: Feedback state
+  const [feedbackSubmitted, setFeedbackSubmitted] = useState({});
+  
   const messagesEndRef = useRef(null);
   const fileInputRef = useRef(null);
   const menuRef = useRef(null);
@@ -57,31 +65,100 @@ function Chat() {
 
     try {
       if (isYouTubeUrl) {
-        // Handle YouTube URL
-        const response = await api.post('/api/videos', { 
-          user: user._id,
+        // Determine action based on user message
+        let action = 'summary'; // default
+        const lowerMessage = userMessage.toLowerCase();
+        
+        if (lowerMessage.includes('transcript only') || lowerMessage.includes('get transcript')) {
+          action = 'transcript';
+        } else if (lowerMessage.includes('lyrics only') || lowerMessage.includes('get lyrics')) {
+          action = 'lyrics';
+        }
+
+        // Get transcript/summary from YouTube
+        const transcriptResponse = await api.post('/api/videos/transcript', { 
           youtubeUrl: userMessage,
-          title: 'YouTube Video',
-          thumbnailUrl: `https://img.youtube.com/vi/${userMessage.match(youtubeRegex)[1]}/default.jpg`,
-          channelTitle: 'Unknown Channel',
-          duration: '0:00',
-          summary: '',
-          tags: []
+          action: action,
+          userId: user._id  // NEW: Enable RAG for YouTube transcripts
         });
+
+        let responseContent = '';
+        let isAnalysis = false;
+
+        if (action === 'transcript') {
+          responseContent = `📝 Video Transcript:\n\n${transcriptResponse.data.transcript}`;
+        } else if (action === 'lyrics') {
+          responseContent = `🎵 Video Lyrics:\n\n${transcriptResponse.data.transcript}`;
+        } else {
+          // Summary
+          responseContent = transcriptResponse.data.summary;
+          isAnalysis = true;
+          
+          // NEW: Set noteId for RAG if available
+          if (transcriptResponse.data.noteId) {
+            setCurrentNoteId(transcriptResponse.data.noteId);
+            console.log('YouTube transcript saved for RAG:', transcriptResponse.data.noteId);
+          }
+        }
 
         setMessages(prev => [...prev, { 
           role: 'assistant', 
-          content: response.data.video.summary || 'YouTube video processed successfully! You can now ask questions about it.',
-          isAnalysis: true,
+          content: responseContent,
+          isAnalysis: isAnalysis,
           fileType: 'video/youtube',
-          fileName: 'YouTube Video'
+          fileName: 'YouTube Video',
+          ragEnabled: transcriptResponse.data.ragEnabled || false  // NEW: Track RAG status
         }]);
+
+        // Save video info if it's a summary
+        if (action === 'summary') {
+          await api.post('/api/videos', { 
+            user: user._id,
+            youtubeUrl: userMessage,
+            title: 'YouTube Video',
+            thumbnailUrl: `https://img.youtube.com/vi/${userMessage.match(youtubeRegex)[1]}/default.jpg`,
+            channelTitle: 'Unknown Channel',
+            duration: '0:00',
+            summary: transcriptResponse.data.summary,
+            tags: []
+          });
+        }
       } else {
-        // Handle regular chat message
-        const response = await api.post('/api/chat', { message: userMessage });
+        // Handle regular chat message - use RAG if noteId available
+        const conversationHistory = messages
+          .filter(msg => !msg.isFile && !msg.isAnalysis) // Exclude file upload messages
+          .slice(1) // Skip the initial welcome message
+          .map(msg => ({
+            role: msg.role === 'user' ? 'user' : 'model',
+            parts: [{ text: msg.content }]
+          }));
+
+        // NEW: Use RAG-enabled endpoint if we have a note
+        const endpoint = currentNoteId ? '/api/chat/context' : '/api/chat';
+        const payload = currentNoteId ? {
+          message: userMessage,
+          noteId: currentNoteId,  // Enable RAG!
+          userId: user._id,
+          history: conversationHistory
+        } : {
+          message: userMessage,
+          history: conversationHistory
+        };
+
+        console.log('=== RAG Debug Info ===');
+        console.log('Endpoint:', endpoint);
+        console.log('Current noteId:', currentNoteId);
+        console.log('Payload:', JSON.stringify(payload, null, 2));
+        console.log('=====================');
+        
+        const response = await api.post(endpoint, payload);
         
         if (response.data && response.data.message) {
-          setMessages(prev => [...prev, { role: 'assistant', content: response.data.message }]);
+          setMessages(prev => [...prev, { 
+            role: 'assistant', 
+            content: response.data.message,
+            usedRAG: response.data.usedRAG || false  // NEW: Track RAG usage
+          }]);
         } else {
           throw new Error('Invalid response from server');
         }
@@ -92,10 +169,32 @@ function Chat() {
       
       if (err.message === 'Authentication required') {
         errorMessage = 'Please log in to use the chat feature';
+      } else if (err.response?.status === 503) {
+        // YouTube feature unavailable
+        errorMessage = err.response.data.message || 'Service temporarily unavailable';
+        if (err.response.data.details) {
+          errorMessage += '\n\n' + err.response.data.details;
+        }
+      } else if (err.response?.status === 404) {
+        // Handle YouTube transcript errors
+        if (err.response?.data?.message?.includes('transcript')) {
+          errorMessage = err.response.data.message;
+          if (err.response.data.details) {
+            errorMessage += '\n\n' + err.response.data.details;
+          }
+        } else {
+          errorMessage = err.response.data?.message || 'Resource not found';
+        }
       } else if (err.response?.status === 500) {
         errorMessage = 'Server error. Please try again in a moment.';
+        if (err.response?.data?.details) {
+          errorMessage += '\n\n' + err.response.data.details;
+        }
       } else if (err.response?.data?.message) {
         errorMessage = err.response.data.message;
+        if (err.response.data.details) {
+          errorMessage += '\n\n' + err.response.data.details;
+        }
       } else if (err.message && err.message !== 'Invalid response from server') {
         errorMessage = err.message;
       }
@@ -141,13 +240,40 @@ function Chat() {
 
       const fileInfo = response.data.file;
       
+      // DEBUG: Log the entire response
+      console.log('📦 Upload response received:');
+      console.log('   Full response:', JSON.stringify(response.data, null, 2));
+      console.log('   fileInfo.noteId:', fileInfo.noteId);
+      console.log('   fileInfo.ragEnabled:', fileInfo.ragEnabled);
+      console.log('   fileInfo.hasText:', fileInfo.hasText);
+      
+      // NEW: Store noteId if RAG is enabled
+      if (fileInfo.noteId) {
+        const noteIdString = fileInfo.noteId.toString();
+        setCurrentNoteId(noteIdString);
+        setUploadedNotes(prev => [...prev, {
+          id: noteIdString,
+          name: fileInfo.originalname,
+          hasText: fileInfo.hasText
+        }]);
+        console.log('✅ Note saved for RAG:', noteIdString);
+        console.log('✅ RAG enabled:', fileInfo.ragEnabled);
+      } else {
+        console.log('⚠️ No noteId returned from upload');
+        console.log('   Possible reasons:');
+        console.log('   - No text extracted from file');
+        console.log('   - Content too short (<50 chars)');
+        console.log('   - Note creation failed on server');
+      }
+      
       // Add AI analysis message
       setMessages(prev => [...prev, { 
         role: 'assistant', 
         content: fileInfo.summary || 'File uploaded successfully!',
         isAnalysis: true,
         fileType: fileInfo.mimetype,
-        fileName: fileInfo.originalname
+        fileName: fileInfo.originalname,
+        ragEnabled: fileInfo.ragEnabled // NEW: Track if RAG is available
       }]);
 
     } catch (err) {
@@ -168,6 +294,36 @@ function Chat() {
     }
     // Reset the input
     e.target.value = '';
+  };
+
+  const handleFeedback = async (messageIndex, rating) => {
+    const message = messages[messageIndex];
+    const previousUserMessage = messages[messageIndex - 1];
+    
+    if (!message || !previousUserMessage || message.role !== 'assistant') {
+      return;
+    }
+
+    try {
+      await api.post('/api/feedback', {
+        userId: user._id,
+        noteId: currentNoteId,
+        query: previousUserMessage.content,
+        response: message.content,
+        rating: rating,
+        usedRAG: message.usedRAG || false
+      });
+
+      // Mark feedback as submitted for this message
+      setFeedbackSubmitted(prev => ({
+        ...prev,
+        [messageIndex]: rating
+      }));
+
+      console.log(`Feedback submitted: ${rating}`);
+    } catch (error) {
+      console.error('Failed to submit feedback:', error);
+    }
   };
 
   const formatMessage = (content) => {
@@ -231,6 +387,11 @@ function Chat() {
                       <span className="analysis-title">
                         {message.fileType === 'video/youtube' ? 'YouTube Analysis Complete' : 'AI Analysis Complete'}
                       </span>
+                      {message.ragEnabled && (
+                        <span className="rag-badge" title="RAG processing enabled for this file">
+                          🎯 RAG Ready
+                        </span>
+                      )}
                     </div>
                     <div 
                       className="analysis-content"
@@ -238,10 +399,39 @@ function Chat() {
                     />
                   </div>
                 ) : (
-                  <div 
-                    className="regular-message"
-                    dangerouslySetInnerHTML={{ __html: formatMessage(message.content) }}
-                  />
+                  <div className="regular-message-wrapper">
+                    {message.usedRAG && (
+                      <div className="message-meta">
+                        <span className="rag-badge" title="Answer generated from your uploaded notes">
+                          🎯 RAG
+                        </span>
+                      </div>
+                    )}
+                    <div 
+                      className="regular-message"
+                      dangerouslySetInnerHTML={{ __html: formatMessage(message.content) }}
+                    />
+                    {message.usedRAG && message.role === 'assistant' && (
+                      <div className="feedback-buttons">
+                        <button
+                          className={`feedback-btn ${feedbackSubmitted[index] === 'positive' ? 'active' : ''}`}
+                          onClick={() => handleFeedback(index, 'positive')}
+                          disabled={feedbackSubmitted[index]}
+                          title="Helpful answer"
+                        >
+                          👍
+                        </button>
+                        <button
+                          className={`feedback-btn ${feedbackSubmitted[index] === 'negative' ? 'active' : ''}`}
+                          onClick={() => handleFeedback(index, 'negative')}
+                          disabled={feedbackSubmitted[index]}
+                          title="Not helpful"
+                        >
+                          👎
+                        </button>
+                      </div>
+                    )}
+                  </div>
                 )}
               </div>
             </div>
@@ -251,7 +441,7 @@ function Chat() {
             <div className="message assistant">
               <div className="message-content">
                 <LoadingDots 
-                  text={uploading ? "Processing your file" : "AI is thinking"} 
+                  text={uploading ? "Processing your file" : currentNoteId ? "Searching your notes with RAG" : "AI is thinking"} 
                   size="small" 
                 />
               </div>
