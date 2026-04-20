@@ -1,6 +1,15 @@
 const Video = require('../models/Video');
 const { body, validationResult } = require('express-validator');
 const mongoose = require('mongoose');
+const { fetchTranscript } = require('youtube-transcript-plus');
+const { GoogleGenerativeAI } = require('@google/generative-ai');
+const apiKeyManager = require('../utils/apiKeyManager');
+
+// Initialize Gemini AI with key rotation
+function getGenAI() {
+  const apiKey = apiKeyManager.getNextKey();
+  return new GoogleGenerativeAI(apiKey);
+}
 
 // Validation middleware for creating a video
 const validateVideo = [
@@ -15,10 +24,9 @@ const validateVideo = [
   body('thumbnailUrl').notEmpty().withMessage('Thumbnail URL is required'),
 ];
 
-// Create a new video (fixed version)
+// Create a new video
 const createVideo = async (req, res) => {
   try {
-    // Validate request
     const errors = validationResult(req);
     if (!errors.isEmpty()) {
       return res.status(400).json({
@@ -30,7 +38,6 @@ const createVideo = async (req, res) => {
 
     const { user, title, youtubeUrl, thumbnailUrl, channelTitle, duration, summary, tags } = req.body;
     
-    // Extract video ID
     const videoIdMatch = youtubeUrl.match(/(?:youtube\.com\/(?:[^\/]+\/.+\/|(?:v|e(?:mbed)?)\/|.*[?&]v=)|youtu\.be\/)([^"&?\/\s]{11})/);
     if (!videoIdMatch) {
       return res.status(400).json({
@@ -40,7 +47,6 @@ const createVideo = async (req, res) => {
     }
     const videoId = videoIdMatch[1];
 
-    // Create video document
     const newVideo = await Video.create({
       user,
       title,
@@ -62,7 +68,6 @@ const createVideo = async (req, res) => {
   } catch (error) {
     console.error('Video creation error:', error);
 
-    // Handle duplicate key error
     if (error.code === 11000 && error.keyValue?.videoId) {
       try {
         const existingVideo = await Video.findOne({ videoId: error.keyValue.videoId });
@@ -76,7 +81,6 @@ const createVideo = async (req, res) => {
       }
     }
 
-    // Handle validation errors from model
     if (error.name === 'ValidationError') {
       return res.status(400).json({
         status: 'error',
@@ -88,7 +92,6 @@ const createVideo = async (req, res) => {
       });
     }
 
-    // Generic error handler
     res.status(500).json({
       status: 'error',
       message: 'Failed to save video info',
@@ -195,6 +198,199 @@ const getLatestVideo = async (req, res) => {
   }
 };
 
+// Extract YouTube transcript using youtube-transcript-plus (WORKING!)
+const getYoutubeTranscript = async (req, res) => {
+  try {
+    const { youtubeUrl, action, userId } = req.body;
+
+    if (!youtubeUrl) {
+      return res.status(400).json({
+        status: 'error',
+        message: 'YouTube URL is required'
+      });
+    }
+
+    // Extract video ID
+    const videoIdMatch = youtubeUrl.match(/(?:youtube\.com\/(?:[^\/]+\/.+\/|(?:v|e(?:mbed)?)\/|.*[?&]v=)|youtu\.be\/)([^"&?\/\s]{11})/);
+    if (!videoIdMatch) {
+      return res.status(400).json({
+        status: 'error',
+        message: 'Invalid YouTube URL format'
+      });
+    }
+    const videoId = videoIdMatch[1];
+
+    console.log(`\n=== YouTube Transcript Request ===`);
+    console.log(`Video ID: ${videoId}`);
+    console.log(`Action: ${action || 'summary'}`);
+
+    // Fetch transcript using youtube-transcript-plus
+    let transcriptData;
+    try {
+      console.log('Fetching transcript...');
+      transcriptData = await fetchTranscript(videoId);
+      console.log(`✅ Transcript fetched: ${transcriptData.length} segments`);
+    } catch (error) {
+      console.error('Transcript fetch error:', error.message);
+      
+      // Handle specific errors
+      if (error.message?.includes('no longer available') || error.message?.includes('removed')) {
+        return res.status(404).json({
+          status: 'error',
+          message: 'Video not found',
+          details: 'The video may be private, deleted, or restricted in your region.',
+          videoId: videoId
+        });
+      }
+      
+      if (error.message?.includes('disabled') || error.message?.includes('not available')) {
+        return res.status(404).json({
+          status: 'error',
+          message: 'No transcript available for this video',
+          details: 'This video does not have captions/subtitles enabled. Please try another video with captions.',
+          videoId: videoId
+        });
+      }
+      
+      throw error;
+    }
+
+    if (!transcriptData || transcriptData.length === 0) {
+      return res.status(404).json({
+        status: 'error',
+        message: 'No transcript available for this video',
+        details: 'The video may not have captions enabled.',
+        videoId: videoId
+      });
+    }
+
+    // Combine transcript text
+    const fullTranscript = transcriptData.map(item => item.text).join(' ');
+    console.log(`Transcript length: ${fullTranscript.length} characters`);
+
+    // Handle different actions
+    let response = {};
+    
+    if (action === 'transcript' || action === 'lyrics') {
+      response = {
+        status: 'success',
+        action: action,
+        transcript: fullTranscript,
+        videoId: videoId
+      };
+    } else if (action === 'summary' || !action) {
+      if (!process.env.GEMINI_API_KEY) {
+        return res.status(500).json({
+          status: 'error',
+          message: 'AI service not configured'
+        });
+      }
+
+      console.log('Generating AI summary...');
+      const genAI = getGenAI();
+      const model = genAI.getGenerativeModel({ model: 'gemini-3-flash-preview' });
+      
+      const prompt = `Please provide a concise summary of this YouTube video transcript. Focus on the main points and key takeaways.
+
+Transcript:
+${fullTranscript.substring(0, 30000)}
+
+Provide a clear, organized summary:`;
+
+      const result = await model.generateContent(prompt);
+      const summary = result.response.text();
+      console.log('✅ Summary generated');
+
+      response = {
+        status: 'success',
+        action: 'summary',
+        summary: summary,
+        transcript: fullTranscript,
+        videoId: videoId
+      };
+    } else {
+      return res.status(400).json({
+        status: 'error',
+        message: 'Invalid action. Use "transcript", "lyrics", or "summary"'
+      });
+    }
+
+    // Save transcript as note for RAG
+    let noteId = null;
+    if (userId && (action === 'summary' || !action)) {
+      try {
+        console.log('Saving to RAG system...');
+        const Note = require('../models/Note');
+        const { chunkText } = require('../utils/chunkText');
+        const { getEmbedding } = require('../utils/embedding');
+        const Chunk = require('../models/Chunk');
+
+        const note = await Note.create({
+          user: userId,
+          title: `YouTube: ${videoId}`,
+          content: fullTranscript,
+          fileType: 'text',
+          fileUrl: youtubeUrl,
+          originalFileName: `youtube_${videoId}.txt`,
+          fileSize: Buffer.byteLength(fullTranscript, 'utf8'),
+          summary: response.summary || 'YouTube video transcript'
+        });
+
+        noteId = note._id;
+
+        const chunks = chunkText(fullTranscript);
+        console.log(`Created ${chunks.length} chunks from YouTube transcript`);
+
+        for (let i = 0; i < chunks.length; i++) {
+          const chunkTextContent = chunks[i];
+          const embedding = await getEmbedding(chunkTextContent);
+          
+          const words = chunkTextContent.toLowerCase().match(/\b\w{5,}\b/g) || [];
+          const wordFreq = {};
+          words.forEach(w => wordFreq[w] = (wordFreq[w] || 0) + 1);
+          const keywords = Object.entries(wordFreq)
+            .sort((a, b) => b[1] - a[1])
+            .slice(0, 5)
+            .map(([word]) => word);
+          
+          await Chunk.create({
+            text: chunkTextContent,
+            embedding: embedding,
+            noteId: note._id,
+            userId: userId,
+            metadata: {
+              chunkIndex: i,
+              totalChunks: chunks.length,
+              wordCount: chunkTextContent.split(/\s+/).length,
+              fileType: 'youtube',
+              sourceFileName: `youtube_${videoId}.txt`,
+              keywords: keywords
+            }
+          });
+        }
+
+        console.log(`✅ YouTube transcript saved as note ${noteId} with RAG support`);
+        response.noteId = noteId;
+        response.ragEnabled = true;
+      } catch (noteError) {
+        console.error('Failed to save YouTube transcript as note:', noteError);
+      }
+    }
+
+    res.status(200).json(response);
+
+  } catch (error) {
+    console.error('YouTube transcript error:', error);
+    
+    res.status(500).json({
+      status: 'error',
+      message: 'Failed to fetch YouTube transcript',
+      details: 'An unexpected error occurred. Please try again.',
+      error: error.message
+    });
+  }
+};
+
 module.exports = {
   getAllVideos,
   getVideoById,
@@ -202,5 +398,6 @@ module.exports = {
   createVideo,
   validateVideo,
   deleteVideo,
-  getLatestVideo
+  getLatestVideo,
+  getYoutubeTranscript
 };

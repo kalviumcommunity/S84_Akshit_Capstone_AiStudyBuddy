@@ -706,3 +706,102 @@
     max-width: 700px;
   }
 }
+
+/* RAG Badge Styles */
+.rag-badge {
+  display: inline-flex;
+  align-items: center;
+  gap: 4px;
+  background: linear-gradient(135deg, #667eea 0%, #764ba2 100%);
+  color: white;
+  padding: 4px 10px;
+  border-radius: 12px;
+  font-size: 11px;
+  font-weight: 600;
+  margin-left: 8px;
+  box-shadow: 0 2px 8px rgba(102, 126, 234, 0.3);
+  animation: ragBadgeAppear 0.3s ease-out;
+}
+
+@keyframes ragBadgeAppear {
+  from {
+    opacity: 0;
+    transform: scale(0.8);
+  }
+  to {
+    opacity: 1;
+    transform: scale(1);
+  }
+}
+
+.light-theme .rag-badge {
+  background: linear-gradient(135deg, #667eea 0%, #764ba2 100%);
+  box-shadow: 0 2px 8px rgba(102, 126, 234, 0.4);
+}
+
+.message-meta {
+  display: flex;
+  align-items: center;
+  margin-bottom: 8px;
+}
+
+.regular-message-wrapper {
+  display: flex;
+  flex-direction: column;
+}
+
+.analysis-header {
+  display: flex;
+  align-items: center;
+  gap: 8px;
+  flex-wrap: wrap;
+}
+
+/* Feedback buttons */
+.feedback-buttons {
+  display: flex;
+  gap: 0.5rem;
+  margin-top: 0.5rem;
+  opacity: 0.7;
+  transition: opacity 0.2s ease;
+}
+
+.feedback-buttons:hover {
+  opacity: 1;
+}
+
+.feedback-btn {
+  background: transparent;
+  border: 1px solid rgba(255, 255, 255, 0.2);
+  border-radius: 0.5rem;
+  padding: 0.25rem 0.5rem;
+  font-size: 1rem;
+  cursor: pointer;
+  transition: all 0.2s ease;
+  opacity: 0.6;
+}
+
+.light-theme .feedback-btn {
+  border-color: rgba(0, 0, 0, 0.2);
+}
+
+.feedback-btn:hover:not(:disabled) {
+  opacity: 1;
+  transform: scale(1.1);
+  border-color: rgba(255, 255, 255, 0.4);
+}
+
+.light-theme .feedback-btn:hover:not(:disabled) {
+  border-color: rgba(0, 0, 0, 0.4);
+}
+
+.feedback-btn.active {
+  opacity: 1;
+  border-color: #4CAF50;
+  background: rgba(76, 175, 80, 0.1);
+}
+
+.feedback-btn:disabled {
+  cursor: not-allowed;
+  opacity: 0.4;
+}

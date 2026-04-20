@@ -1,6 +1,6 @@
 const express = require('express');
 const router = express.Router();
-const { getAllVideos, getVideoById, getVideosByUser, createVideo, validateVideo, deleteVideo, getLatestVideo } = require('../controllers/videoController');
+const { getAllVideos, getVideoById, getVideosByUser, createVideo, validateVideo, deleteVideo, getLatestVideo, getYoutubeTranscript } = require('../controllers/videoController');
 const { updateVideo, validateVideoUpdate } = require('../controllers/putController');
 
 // GET /api/videos - Get all videos
@@ -17,6 +17,9 @@ router.get('/:id', getVideoById);
 
 // POST /api/videos - Create a new video
 router.post('/', validateVideo, createVideo);
+
+// POST /api/videos/transcript - Get YouTube transcript
+router.post('/transcript', getYoutubeTranscript);
 
 // PUT /api/videos/:id - Update a video
 router.put('/:id', validateVideoUpdate, updateVideo);

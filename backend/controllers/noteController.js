@@ -1,5 +1,8 @@
 const Note = require('../models/Note');
+const Chunk = require('../models/Chunk');
 const { body, validationResult } = require('express-validator');
+const { chunkText } = require('../utils/chunkText');
+const { getEmbedding, getEmbeddings } = require('../utils/embedding'); // Use fallback vectors (free)
 
 // Validation middleware for creating a note
 const validateNote = [
@@ -86,7 +89,24 @@ const createNote = async (req, res) => {
     if (tags && Array.isArray(tags)) noteData.tags = tags;
     if (isPublic !== undefined) noteData.isPublic = isPublic;
     
+    // Create the note first
     const newNote = await Note.create(noteData);
+    
+    // Process chunks and embeddings asynchronously (don't block response)
+    // This runs in background after note is created
+    console.log(`📝 Note created: ${newNote._id}, starting background chunk processing...`);
+    
+    // Start background processing but don't await it
+    setImmediate(async () => {
+      try {
+        await processNoteChunks(newNote._id, user, content);
+      } catch (error) {
+        console.error('❌ Background chunk processing failed:', error.message);
+        console.error('   Note ID:', newNote._id);
+        console.error('   Stack:', error.stack);
+      }
+    });
+    
     return res.status(201).json(newNote);
   } catch (error) {
     console.error("Note creation error:", error);
@@ -106,6 +126,99 @@ const createNote = async (req, res) => {
   }
 };
 
+/**
+ * Process note content into chunks with embeddings (runs asynchronously)
+ * @param {ObjectId} noteId - The note ID
+ * @param {ObjectId} userId - The user ID
+ * @param {string} content - The note content
+ */
+async function processNoteChunks(noteId, userId, content) {
+  try {
+    console.log(`🔄 Processing chunks for note ${noteId}...`);
+    console.log(`   Content length: ${content.length} characters`);
+    
+    // Split content into chunks
+    const chunks = chunkText(content, 400, 50);
+    
+    if (chunks.length === 0) {
+      console.log('⚠️  No chunks generated for note (content too short or empty)');
+      return;
+    }
+    
+    console.log(`✓ Generated ${chunks.length} chunks`);
+    
+    // Generate embeddings for all chunks (with delay to avoid rate limits)
+    console.log('🔄 Generating embeddings...');
+    const embeddings = [];
+    let failedCount = 0;
+    
+    for (let i = 0; i < chunks.length; i++) {
+      try {
+        const embedding = await getEmbedding(chunks[i]);
+        embeddings.push(embedding);
+        console.log(`   ✓ Embedding ${i + 1}/${chunks.length} generated`);
+        
+        // Add delay between requests to avoid rate limiting
+        if (i < chunks.length - 1) {
+          await new Promise(resolve => setTimeout(resolve, 600));
+        }
+      } catch (error) {
+        failedCount++;
+        console.error(`   ⚠️  Failed to generate embedding ${i + 1}:`, error.message);
+        // Don't throw - use fallback vector instead
+        const fallbackEmbedding = await getEmbedding(chunks[i]); // Will use createSimpleVector fallback
+        embeddings.push(fallbackEmbedding);
+        console.log(`   ✓ Using fallback vector for chunk ${i + 1}`);
+      }
+    }
+    
+    console.log(`✓ All ${embeddings.length} embeddings generated (${failedCount} used fallback)`);
+    
+    if (embeddings.length !== chunks.length) {
+      throw new Error(`Embedding count mismatch: ${embeddings.length} vs ${chunks.length}`);
+    }
+    
+    // Prepare chunk documents
+    const chunkDocuments = chunks.map((text, index) => {
+      // Extract keywords (words longer than 4 chars, top 5)
+      const words = text.toLowerCase().match(/\b\w{5,}\b/g) || [];
+      const wordFreq = {};
+      words.forEach(w => wordFreq[w] = (wordFreq[w] || 0) + 1);
+      const keywords = Object.entries(wordFreq)
+        .sort((a, b) => b[1] - a[1])
+        .slice(0, 5)
+        .map(([word]) => word);
+      
+      return {
+        text,
+        embedding: embeddings[index],
+        noteId,
+        userId,
+        metadata: {
+          chunkIndex: index,
+          totalChunks: chunks.length,
+          wordCount: text.split(/\s+/).length,
+          fileType: 'text',
+          sourceFileName: '',
+          keywords: keywords
+        }
+      };
+    });
+    
+    // Insert all chunks into database
+    console.log(`💾 Inserting ${chunkDocuments.length} chunks into database...`);
+    await Chunk.insertMany(chunkDocuments);
+    
+    console.log(`✅ Successfully stored ${chunkDocuments.length} chunks for note ${noteId}`);
+    console.log(`   Total words processed: ${chunkDocuments.reduce((sum, c) => sum + c.metadata.wordCount, 0)}`);
+    console.log(`   ⏱️  Processing completed - chunks are now queryable!`);
+  } catch (error) {
+    console.error('❌ Error in processNoteChunks:', error.message);
+    console.error('   Stack:', error.stack);
+    throw error;
+  }
+}
+
 // Delete a note
 const deleteNote = async (req, res) => {
   try {
@@ -120,6 +233,10 @@ const deleteNote = async (req, res) => {
     if (!deletedNote) {
       return res.status(404).json({ message: 'Note not found' });
     }
+    
+    // Also delete associated chunks
+    await Chunk.deleteMany({ noteId: id });
+    console.log(`Deleted chunks for note ${id}`);
     
     res.status(200).json({ message: 'Note deleted successfully', deletedNote });
   } catch (error) {
@@ -137,5 +254,6 @@ module.exports = {
   getNotesByUser,
   createNote,
   validateNote,
-  deleteNote
+  deleteNote,
+  processNoteChunks
 }; 

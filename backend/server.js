@@ -80,7 +80,7 @@ app.use('/api/sessions', sessionRoutes);
 app.use('/api/notes', noteRoutes);
 app.use('/api/videos', videoRoutes);
 app.use('/api/upload', uploadRoutes);
-app.use('/api', chatRoutes);
+app.use('/api/chat', chatRoutes);  // Mount at /api/chat
 app.use('/api/ai', aiRoutes);
 
 // Error handling middleware

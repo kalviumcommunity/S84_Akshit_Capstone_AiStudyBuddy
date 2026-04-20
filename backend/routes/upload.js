@@ -6,11 +6,19 @@ const cloudinary = require('../config/cloudinary');
 const auth = require('../middleware/auth');
 const { GoogleGenerativeAI } = require('@google/generative-ai');
 const fetch = require('node-fetch');
+const pdf = require('pdf-parse');
+const Note = require('../models/Note');
+const { extractTextWithOCR } = require('../utils/ocr');
+const { processNoteChunks } = require('../controllers/noteController');
+const apiKeyManager = require('../utils/apiKeyManager');
 
 const router = express.Router();
 
-// Initialize Gemini AI
-const genAI = new GoogleGenerativeAI(process.env.GEMINI_API_KEY);
+// Initialize Gemini AI with key rotation
+function getGenAI() {
+  const apiKey = apiKeyManager.getNextKey();
+  return new GoogleGenerativeAI(apiKey);
+}
 
 // Configure multer for memory storage (files will be stored in memory temporarily)
 const storage = multer.memoryStorage();
@@ -43,7 +51,8 @@ const analyzeImageWithAI = async (imageUrl) => {
       throw new Error('GEMINI_API_KEY not configured');
     }
     
-    const model = genAI.getGenerativeModel({ model: "gemini-2.5-flash" });
+    const genAI = getGenAI();
+    const model = genAI.getGenerativeModel({ model: "gemini-3-flash-preview" });
     
     // Fetch image and convert to base64
     console.log('Fetching image from URL...');
@@ -139,9 +148,14 @@ const uploadToCloudinary = (buffer, originalname, mimetype) => {
 // Upload endpoint - protected by authentication
 router.post('/', auth, upload.single('file'), async (req, res) => {
   try {
-    console.log('Upload request received');
+    console.log('========================================');
+    console.log('📥 UPLOAD REQUEST RECEIVED');
+    console.log('========================================');
     console.log('User:', req.user ? req.user._id : 'No user');
     console.log('File:', req.file ? req.file.originalname : 'No file');
+    console.log('File type:', req.file ? req.file.mimetype : 'N/A');
+    console.log('File size:', req.file ? `${(req.file.size / 1024).toFixed(2)} KB` : 'N/A');
+    console.log('========================================');
     
     if (!req.file) {
       return res.status(400).json({ 
@@ -165,44 +179,128 @@ router.post('/', auth, upload.single('file'), async (req, res) => {
     console.log('Cloudinary upload successful:', result.public_id);
 
     let aiSummary = 'File uploaded successfully';
+    let noteId = null;
+    let textContent = '';
+    let extractionMethod = 'none';
     
-    // If it's an image, analyze it with AI
-    if (req.file.mimetype.startsWith('image/')) {
-      console.log('Image detected, starting AI analysis...');
-      console.log('Gemini API Key configured:', process.env.GEMINI_API_KEY ? 'Yes' : 'No');
-      console.log('Image URL for analysis:', result.secure_url);
-      
+    console.log('📄 Processing file type:', req.file.mimetype);
+    
+    // Use OCR-enabled text extraction
+    console.log('🔄 Starting text extraction with OCR fallback...');
+    const extraction = await extractTextWithOCR(
+      req.file.buffer, 
+      req.file.mimetype,
+      'eng' // Language: English (can be made configurable)
+    );
+    
+    textContent = extraction.text;
+    extractionMethod = extraction.method;
+    
+    console.log(`✓ Extraction completed using: ${extractionMethod}`);
+    console.log(`   Extracted: ${textContent.length} characters`);
+    
+    if (textContent.length > 0) {
+      // Clean up the text (remove excessive whitespace)
+      textContent = textContent.replace(/\s+/g, ' ').trim();
+      console.log(`   After cleanup: ${textContent.length} characters`);
+      console.log(`   Preview: ${textContent.substring(0, 200)}...`);
+    } else {
+      console.log('⚠️  No text extracted');
+      if (extraction.error) {
+        console.log(`   Error: ${extraction.error}`);
+      }
+    }
+    
+    // Save as note if we have text content (triggers RAG processing)
+    // UPDATED: Create note even with minimal content to enable RAG
+    if (textContent && textContent.trim().length > 50) {
       try {
-        // Set a timeout for AI analysis
-        const analysisPromise = analyzeImageWithAI(result.secure_url);
-        const timeoutPromise = new Promise((_, reject) => 
-          setTimeout(() => reject(new Error('AI analysis timeout')), 45000) // 45 second timeout
-        );
+        console.log('📝 Creating note for RAG processing...');
+        console.log(`   User ID: ${req.user._id}`);
+        console.log(`   File: ${req.file.originalname}`);
+        console.log(`   Content length: ${textContent.length} characters`);
         
-        aiSummary = await Promise.race([analysisPromise, timeoutPromise]);
-        console.log('AI analysis completed successfully');
+        const newNote = await Note.create({
+          user: req.user._id,
+          title: req.file.originalname,
+          content: textContent,
+          fileType: req.file.mimetype.startsWith('image/') ? 'text' : (req.file.mimetype === 'application/pdf' ? 'pdf' : 'text'),
+          fileUrl: result.secure_url,
+          originalFileName: req.file.originalname,
+          fileSize: req.file.size,
+          summary: 'Processing...'
+        });
+        noteId = newNote._id;
+        console.log(`✅ Note created with ID: ${noteId}`);
+        console.log('🔄 Starting background chunk processing...');
+        
+        // Start background chunk processing
+        setImmediate(async () => {
+          try {
+            await processNoteChunks(noteId, req.user._id, textContent);
+          } catch (error) {
+            console.error('❌ Background chunk processing failed:', error.message);
+            console.error('   Stack:', error.stack);
+          }
+        });
+        
+        aiSummary = `File uploaded and saved! Your note is being processed for intelligent search. ⏳ Please wait 15-20 seconds before asking questions to allow processing to complete.`;
       } catch (error) {
-        console.error('AI analysis failed with error:', error.message);
-        aiSummary = `Image uploaded successfully to Cloudinary. AI analysis failed: ${error.message}. You can try re-uploading or analyze the content manually.`;
+        console.error('❌ Note creation error:', error.message);
+        console.error('   Stack:', error.stack);
+        aiSummary = 'File uploaded but note creation failed. RAG features will not be available.';
+      }
+    } else {
+      console.log('⚠️  No text content extracted or content too short (< 50 chars), skipping note creation');
+      console.log(`   Content length: ${textContent.length}`);
+      console.log(`   File type: ${req.file.mimetype}`);
+      console.log(`   Extraction method: ${extractionMethod}`);
+      console.log(`   Content preview: "${textContent.substring(0, 100)}"`);
+      
+      // Provide helpful message based on extraction method
+      if (extractionMethod === 'ocr') {
+        aiSummary = 'File uploaded successfully. OCR was used but extracted insufficient text for RAG. The file might have poor image quality or no readable text.';
+      } else if (extractionMethod === 'error') {
+        aiSummary = `File uploaded successfully, but text extraction failed: ${extraction.error || 'Unknown error'}. You can still view the file.`;
+      } else if (req.file.mimetype.startsWith('image/')) {
+        aiSummary = 'Image uploaded successfully, but OCR did not extract enough text for RAG. Try uploading an image with clearer text.';
+      } else if (req.file.mimetype === 'application/pdf') {
+        aiSummary = 'PDF uploaded successfully. OCR was attempted but no text could be extracted. The PDF might be empty or have very poor quality scans.';
+      } else {
+        aiSummary = 'File uploaded successfully, but no text content could be extracted for RAG features.';
       }
     }
 
     // Return the file information
+    // Convert noteId to string for JSON serialization
+    const noteIdString = noteId ? noteId.toString() : null;
+    
+    console.log('📤 Sending response to client:');
+    console.log(`   NoteId: ${noteIdString || 'null'}`);
+    console.log(`   RAG Enabled: ${noteIdString !== null}`);
+    console.log(`   Has Text: ${textContent.length > 0}`);
+    console.log(`   Extraction Method: ${extractionMethod}`);
+    console.log(`   Text Content Preview: ${textContent.substring(0, 100)}...`);
+    
     res.json({
       message: 'File uploaded successfully',
       file: {
-        _id: result.public_id, // Use Cloudinary public_id as the file ID
+        _id: result.public_id,
         filename: result.public_id,
         originalname: req.file.originalname,
         mimetype: req.file.mimetype,
         size: req.file.size,
-        url: result.secure_url, // Cloudinary URL
+        url: result.secure_url,
         cloudinary_id: result.public_id,
         resource_type: result.resource_type,
         created_at: result.created_at,
-        summary: aiSummary, // AI-generated summary for images
+        summary: aiSummary,
         isImage: req.file.mimetype.startsWith('image/'),
-        aiAnalyzed: req.file.mimetype.startsWith('image/')
+        aiAnalyzed: extractionMethod === 'ocr' || extractionMethod === 'pdf-parse',
+        noteId: noteIdString,
+        hasText: textContent.length > 0,
+        ragEnabled: noteIdString !== null,
+        extractionMethod: extractionMethod // NEW: Show how text was extracted
       }
     });
   } catch (error) {
