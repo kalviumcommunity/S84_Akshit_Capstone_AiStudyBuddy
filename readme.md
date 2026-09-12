@@ -1,25 +1,36 @@
 # AI Study Buddy 📚🤖
 
-# frontend link (netlify)
-[https://aistudybuddy.netlify.app]
+**Built an AI-powered study assistant using React, Node.js, and Gemini API to enable natural language note querying, document processing, and intelligent session management.**
 
-# Backend link (render)
-[https://aistudybuddy.onrender.com] 
+## 🔗 Live Links
+- **Frontend:** [https://aistudybuddy.netlify.app](https://aistudybuddy.netlify.app)
+- **Backend:** [https://aistudybuddy.onrender.com](https://aistudybuddy.onrender.com)
 
-## 🔍 Project Overview
-AI Study Buddy is an AI-powered web app that helps users upload their study notes (PDF or Text), paste YouTube video links, and interact via Q&A or generate summaries—all powered by OpenAI. The app offers session tracking, secure login, file handling, and a sleek modern UI.
+## 🔍 Overview
+Developed a full-stack study assistant that processes PDFs and text notes using OCR, implements RAG-based semantic search with vector embeddings, and provides AI-powered Q&A capabilities. Features include secure authentication, session tracking, intelligent caching, and API rate limit management.
 
 ## ⚙️ Tech Stack
-- **Frontend:** React, TailwindCSS, Framer Motion  
-- **Backend:** Node.js, Express.js  
-- **Database:** MongoDB  
-- **Authentication:** Username/Password and Google OAuth  
-- **AI:** OpenAI API  
-- **Deployment:** Vercel (Frontend), Render (Backend)  
+- **Frontend:** React, Vite, TailwindCSS, Framer Motion
+- **Backend:** Node.js, Express.js, MongoDB
+- **AI/ML:** Gemini API (with key rotation), Groq (Llama models), Jina AI (Embeddings), Vector Search
+- **Storage & External APIs:** Cloudinary, Google Drive API
+- **Features:** JWT Authentication, OCR Processing, RAG Implementation, Intelligent Caching (Redis)
+- **Deployment:** Netlify (Frontend), Render (Backend)  
 
 ---
 
-## 🗓️ Capstone Daily Plan (Level-1)
+## 🎯 Key Features
+- **Document Processing:** OCR-powered PDF and text extraction with intelligent chunking
+- **Semantic Search:** Vector embeddings and similarity matching for relevant context retrieval
+- **AI Chat:** Natural language Q&A with RAG-enhanced responses using Gemini API
+- **Session Management:** Persistent chat history and note organization
+- **Smart Caching:** Redis-based caching for embeddings and API responses
+- **Rate Limiting:** Intelligent API key rotation to handle usage limits
+- **Authentication:** Secure JWT-based user authentication
+
+---
+
+## 🗓️ Development Timeline
 
 
 | Day | Task |
@@ -50,5 +61,48 @@ AI Study Buddy is an AI-powered web app that helps users upload their study note
 
 ---
 
-## 🚀 Let's Go!
-This README marks the beginning of the AI Study Buddy journey. Contributions, feedback, and reviews are welcome via PRs!
+## 🚀 Getting Started
+
+### Prerequisites
+- Node.js (v16+)
+- MongoDB
+- API Keys: Gemini API, Jina AI, Groq API, Google Drive API
+- Cloud Services: Cloudinary, Redis (Upstash)
+
+### Installation
+
+```bash
+# Clone repository
+git clone <repository-url>
+
+# Install backend dependencies
+cd backend
+npm install
+
+# Install frontend dependencies
+cd ../client
+npm install
+
+# Configure environment variables
+# Create .env in backend/ with:
+# - MONGODB_URI, JWT_SECRET, PORT, VITE_API_URL
+# - GEMINI_API_KEY (supports multiple keys like GEMINI_API_KEY_2 for rotation)
+# - CLOUDINARY_CLOUD_NAME, CLOUDINARY_API_KEY, CLOUDINARY_API_SECRET
+# - JINA_API_KEY (for embeddings)
+# - GROQ_API_KEY (for Llama models)
+# - REDIS_URL (for caching)
+# - GOOGLE_DRIVE_API_KEY (for Drive access)
+
+# Run backend
+cd backend
+npm start
+
+# Run frontend
+cd client
+npm run dev
+```
+
+---
+
+## 📝 Contributing
+Contributions, feedback, and reviews are welcome via pull requests!

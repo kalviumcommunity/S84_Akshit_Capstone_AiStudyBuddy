@@ -3,6 +3,7 @@ const mongoose = require('mongoose');
 const dotenv = require('dotenv');
 const cors = require('cors');
 const path = require('path');
+const cron = require('node-cron');
 
 dotenv.config();
 
@@ -55,6 +56,7 @@ const putRoutes = require('./routes/putRoutes');
 const userRoutes = require('./routes/userRoutes');
 const chatRoutes = require('./routes/chatRoutes');
 const aiRoutes = require('./routes/aiRoutes');
+const driveRoutes = require('./routes/driveRoutes');
 
 // Home route
 app.get('/', (req, res) => {
@@ -82,6 +84,7 @@ app.use('/api/videos', videoRoutes);
 app.use('/api/upload', uploadRoutes);
 app.use('/api/chat', chatRoutes);  // Mount at /api/chat
 app.use('/api/ai', aiRoutes);
+app.use('/api/drive', driveRoutes);
 
 // Error handling middleware
 app.use((err, req, res, next) => {
@@ -113,4 +116,26 @@ app.listen(PORT, () => {
   console.log('- /api/upload');
   console.log('- /api/chat');
   console.log('- /api/ai');
+  console.log('- /api/drive');
+  
+  // Initialize Drive sync cron job
+  initializeDriveSync();
 });
+
+// Initialize automatic Drive sync
+function initializeDriveSync() {
+  const driveSyncService = require('./services/driveSyncService');
+  
+  // Run sync every hour (at minute 0)
+  // Cron format: minute hour day month weekday
+  cron.schedule('0 * * * *', async () => {
+    console.log('Running scheduled Drive sync...');
+    try {
+      await driveSyncService.syncAllDriveSources();
+    } catch (error) {
+      console.error('Scheduled Drive sync failed:', error);
+    }
+  });
+
+  console.log('Drive sync scheduler initialized (runs every hour)');
+}

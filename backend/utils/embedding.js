@@ -2,9 +2,8 @@ const fetch = require('node-fetch');
 const cache = require('./cache');
 
 /**
- * Generate embedding vector for text using Jina AI or OpenAI
+ * Generate embedding vector for text using Jina AI
  * Jina AI: jina-embeddings-v2-base-en (768 dimensions, 1M tokens/month free)
- * OpenAI: text-embedding-3-small (1536 dimensions, paid)
  * 
  * @param {string} text - The text to embed
  * @returns {Promise<Array<number>>} Embedding vector
@@ -15,12 +14,11 @@ async function getEmbedding(text) {
       throw new Error('Invalid text input for embedding');
     }
 
-    // Check for API keys
+    // Check for Jina API key
     const jinaApiKey = process.env.JINA_API_KEY;
-    const openaiApiKey = process.env.OPENAI_API_KEY;
 
-    if (!jinaApiKey && !openaiApiKey) {
-      console.log('   ⚠️  No embedding API key configured, using fallback');
+    if (!jinaApiKey) {
+      console.log('   ⚠️  No Jina API key configured, using fallback');
       return createSimpleVector(text);
     }
 
@@ -34,75 +32,40 @@ async function getEmbedding(text) {
 
     let embedding;
 
-    // Try Jina AI first (preferred - free and designed for embeddings)
-    if (jinaApiKey) {
-      try {
-        const url = "https://api.jina.ai/v1/embeddings";
-        console.log('   🔍 Calling Jina AI embeddings API');
-        
-        const response = await fetch(url, {
-          method: "POST",
-          headers: {
-            "Authorization": `Bearer ${jinaApiKey}`,
-            "Content-Type": "application/json",
-          },
-          body: JSON.stringify({
-            input: [text.substring(0, 8000)],
-            model: "jina-embeddings-v2-base-en"
-          }),
-        });
+    // Call Jina AI embeddings API
+    try {
+      const url = "https://api.jina.ai/v1/embeddings";
+      console.log('   🔍 Calling Jina AI embeddings API');
+      
+      const response = await fetch(url, {
+        method: "POST",
+        headers: {
+          "Authorization": `Bearer ${jinaApiKey}`,
+          "Content-Type": "application/json",
+        },
+        body: JSON.stringify({
+          input: [text.substring(0, 8000)],
+          model: "jina-embeddings-v2-base-en"
+        }),
+      });
 
-        if (response.ok) {
-          const result = await response.json();
-          if (result.data && result.data[0] && result.data[0].embedding) {
-            embedding = result.data[0].embedding;
-            console.log('   ✅ Generated Jina AI embedding:', embedding.length, 'dimensions');
-          }
-        } else {
-          const errorText = await response.text();
-          console.log(`   ⚠️  Jina AI error (${response.status}): ${errorText}`);
+      if (response.ok) {
+        const result = await response.json();
+        if (result.data && result.data[0] && result.data[0].embedding) {
+          embedding = result.data[0].embedding;
+          console.log('   ✅ Generated Jina AI embedding:', embedding.length, 'dimensions');
         }
-      } catch (jinaError) {
-        console.log('   ⚠️  Jina AI request failed:', jinaError.message);
+      } else {
+        const errorText = await response.text();
+        console.log(`   ⚠️  Jina AI error (${response.status}): ${errorText}`);
       }
+    } catch (jinaError) {
+      console.log('   ⚠️  Jina AI request failed:', jinaError.message);
     }
 
-    // Fallback to OpenAI if Jina failed
-    if (!embedding && openaiApiKey) {
-      try {
-        const url = "https://api.openai.com/v1/embeddings";
-        console.log('   🔍 Calling OpenAI embeddings API');
-        
-        const response = await fetch(url, {
-          method: "POST",
-          headers: {
-            "Authorization": `Bearer ${openaiApiKey}`,
-            "Content-Type": "application/json",
-          },
-          body: JSON.stringify({
-            input: text.substring(0, 8000),
-            model: "text-embedding-3-small"
-          }),
-        });
-
-        if (response.ok) {
-          const result = await response.json();
-          if (result.data && result.data[0] && result.data[0].embedding) {
-            embedding = result.data[0].embedding;
-            console.log('   ✅ Generated OpenAI embedding:', embedding.length, 'dimensions');
-          }
-        } else {
-          const errorText = await response.text();
-          console.log(`   ⚠️  OpenAI error (${response.status}): ${errorText}`);
-        }
-      } catch (openaiError) {
-        console.log('   ⚠️  OpenAI request failed:', openaiError.message);
-      }
-    }
-
-    // If both APIs failed, use fallback
+    // If Jina failed, use fallback
     if (!embedding) {
-      console.log('   ⚠️  All embedding APIs failed, using fallback');
+      console.log('   ⚠️  Jina AI failed, using fallback vector');
       return createSimpleVector(text);
     }
 

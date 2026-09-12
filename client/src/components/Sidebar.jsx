@@ -1,8 +1,10 @@
 import React, { useState } from 'react';
-import { FaBars, FaEdit, FaGem, FaChevronRight, FaComments, FaPlus } from 'react-icons/fa';
+import { useNavigate } from 'react-router-dom';
+import { FaBars, FaEdit, FaGem, FaChevronRight, FaComments, FaPlus, FaGoogleDrive } from 'react-icons/fa';
 import './Sidebar.css';
 
 function Sidebar({ isOpen, onToggle, onNewChat }) {
+  const navigate = useNavigate();
   const [expandedSections, setExpandedSections] = useState({
     myStuff: false,
     chats: true
@@ -60,6 +62,16 @@ function Sidebar({ isOpen, onToggle, onNewChat }) {
           
           {expandedSections.myStuff && (
             <div className="sidebar-subsection">
+              <button 
+                className="sidebar-subitem"
+                onClick={() => {
+                  navigate('/drive');
+                  if (window.innerWidth <= 768) onToggle();
+                }}
+              >
+                <FaGoogleDrive style={{ marginRight: '8px' }} />
+                <span>Google Drive Sources</span>
+              </button>
               <button className="sidebar-subitem">
                 <span>Uploaded Files</span>
               </button>

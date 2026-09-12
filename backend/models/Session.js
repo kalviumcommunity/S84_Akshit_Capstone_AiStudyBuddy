@@ -69,6 +69,10 @@ studySessionSchema.index({ tags: 1 });
 studySessionSchema.index({ startTime: 1 });
 studySessionSchema.index({ 'content.contentId': 1 });
 
+// TTL index: Automatically delete sessions after 7 days (604800 seconds)
+// MongoDB will delete documents where createdAt is older than 7 days
+studySessionSchema.index({ createdAt: 1 }, { expireAfterSeconds: 604800 });
+
 const StudySession = mongoose.model('StudySession', studySessionSchema);
 
 module.exports = StudySession;
