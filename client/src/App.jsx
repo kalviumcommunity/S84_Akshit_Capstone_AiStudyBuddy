@@ -9,6 +9,7 @@ import Welcome from './components/Welcome';
 import Navbar from './components/Navbar';
 import Sidebar from './components/Sidebar';
 import Chat from './components/Chat';
+import DriveManager from './components/DriveManager';
 import LoadingScreen from './components/LoadingScreen';
 import './App.css';
 
@@ -116,6 +117,16 @@ function AppContent() {
         element={
           <ProtectedRoute>
             <DashboardLayout />
+          </ProtectedRoute>
+        }
+      />
+      <Route
+        path="/drive"
+        element={
+          <ProtectedRoute>
+            <StandardLayout>
+              <DriveManager />
+            </StandardLayout>
           </ProtectedRoute>
         }
       />

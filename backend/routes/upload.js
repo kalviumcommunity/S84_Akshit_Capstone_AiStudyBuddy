@@ -9,7 +9,7 @@ const fetch = require('node-fetch');
 const pdf = require('pdf-parse');
 const Note = require('../models/Note');
 const { extractTextWithOCR } = require('../utils/ocr');
-const { processNoteChunks } = require('../controllers/noteController');
+const { processNoteWithLlamaIndex } = require('../controllers/noteControllerLlamaIndex');
 const apiKeyManager = require('../utils/apiKeyManager');
 
 const router = express.Router();
@@ -38,7 +38,7 @@ const upload = multer({
   storage,
   fileFilter,
   limits: {
-    fileSize: 10 * 1024 * 1024 // 10MB limit (Cloudinary can handle larger files)
+    fileSize: 5 * 1024 * 1024 // 5MB limit
   }
 });
 
@@ -164,6 +164,15 @@ router.post('/', auth, upload.single('file'), async (req, res) => {
       });
     }
 
+    // Check file size (5MB limit)
+    const maxSize = 5 * 1024 * 1024; // 5MB in bytes
+    if (req.file.size > maxSize) {
+      return res.status(400).json({
+        error: 'File too large',
+        message: 'File size exceeds 5MB limit. Please upload a smaller file.'
+      });
+    }
+
     console.log('Cloudinary config check:');
     console.log('Cloud name:', process.env.CLOUDINARY_CLOUD_NAME);
     console.log('API key:', process.env.CLOUDINARY_API_KEY ? 'Set' : 'Not set');
@@ -187,14 +196,43 @@ router.post('/', auth, upload.single('file'), async (req, res) => {
     
     // Use OCR-enabled text extraction
     console.log('🔄 Starting text extraction with OCR fallback...');
-    const extraction = await extractTextWithOCR(
-      req.file.buffer, 
-      req.file.mimetype,
-      'eng' // Language: English (can be made configurable)
-    );
     
-    textContent = extraction.text;
-    extractionMethod = extraction.method;
+    // For PDFs, try simple pdf-parse first, then fallback to Gemini OCR
+    if (req.file.mimetype === 'application/pdf') {
+      try {
+        console.log('📄 PDF detected, trying pdf-parse...');
+        const pdfData = await pdf(req.file.buffer);
+        textContent = pdfData.text || '';
+        extractionMethod = 'pdf-parse';
+        console.log(`✓ PDF text extracted: ${textContent.length} characters`);
+      } catch (pdfError) {
+        console.log('⚠️  pdf-parse failed, using Gemini OCR...');
+        console.log(`   Error: ${pdfError.message}`);
+        
+        // Fallback to Gemini OCR for scanned PDFs
+        try {
+          textContent = await analyzeImageWithAI(result.secure_url);
+          extractionMethod = 'gemini-ocr';
+          console.log(`✓ Gemini OCR completed: ${textContent.length} characters`);
+        } catch (geminiError) {
+          console.error('❌ Gemini OCR also failed:', geminiError.message);
+          textContent = '';
+          extractionMethod = 'error';
+        }
+      }
+    } else if (req.file.mimetype.startsWith('image/')) {
+      // For images, use Gemini OCR directly
+      try {
+        console.log('🖼️  Image detected, using Gemini OCR...');
+        textContent = await analyzeImageWithAI(result.secure_url);
+        extractionMethod = 'gemini-ocr';
+        console.log(`✓ Gemini OCR completed: ${textContent.length} characters`);
+      } catch (geminiError) {
+        console.error('❌ Gemini OCR failed:', geminiError.message);
+        textContent = '';
+        extractionMethod = 'error';
+      }
+    }
     
     console.log(`✓ Extraction completed using: ${extractionMethod}`);
     console.log(`   Extracted: ${textContent.length} characters`);
@@ -234,12 +272,12 @@ router.post('/', auth, upload.single('file'), async (req, res) => {
         console.log(`✅ Note created with ID: ${noteId}`);
         console.log('🔄 Starting background chunk processing...');
         
-        // Start background chunk processing
+        // Start background LlamaIndex processing
         setImmediate(async () => {
           try {
-            await processNoteChunks(noteId, req.user._id, textContent);
+            await processNoteWithLlamaIndex(noteId, req.user._id, textContent, req.file.originalname);
           } catch (error) {
-            console.error('❌ Background chunk processing failed:', error.message);
+            console.error('❌ Background LlamaIndex processing failed:', error.message);
             console.error('   Stack:', error.stack);
           }
         });
@@ -305,6 +343,15 @@ router.post('/', auth, upload.single('file'), async (req, res) => {
     });
   } catch (error) {
     console.error('Upload error:', error);
+    
+    // Handle multer file size error
+    if (error.code === 'LIMIT_FILE_SIZE') {
+      return res.status(400).json({
+        error: 'File too large',
+        message: 'File size exceeds 5MB limit. Please upload a smaller file.'
+      });
+    }
+    
     res.status(500).json({
       error: 'Upload failed',
       message: error.message

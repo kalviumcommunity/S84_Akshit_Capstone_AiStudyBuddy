@@ -63,6 +63,10 @@ chunkSchema.index({ 'metadata.fileType': 1 });
 // Compound index for common queries
 chunkSchema.index({ userId: 1, noteId: 1 });
 
+// TTL index: Automatically delete chunks after 7 days (604800 seconds)
+// MongoDB will delete documents where createdAt is older than 7 days
+chunkSchema.index({ createdAt: 1 }, { expireAfterSeconds: 604800 });
+
 // Note: Vector search index must be created in MongoDB Atlas UI
 // Go to: Atlas → Database → Search → Create Search Index
 // Index name: "vector_index"

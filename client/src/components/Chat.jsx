@@ -1,4 +1,5 @@
 import React, { useState, useRef, useEffect } from 'react';
+import { useNavigate } from 'react-router-dom';
 import api from '../api/api';
 import LoadingDots from './LoadingDots';
 import { useAuth } from '../context/AuthContext';
@@ -6,6 +7,7 @@ import './Chat.css';
 
 function Chat() {
   const { user } = useAuth();
+  const navigate = useNavigate();
   const [messages, setMessages] = useState([
     { role: 'assistant', content: 'Welcome to AI Study Buddy! 🎓\n\nI can help you with:\n• Analyzing documents and images you upload\n• Summarizing YouTube videos\n• Getting YouTube video transcripts or lyrics (just add "transcript only" or "lyrics only" after the URL)\n• Answering questions about your study materials\n• General academic assistance\n\nJust type a message, click the + button to upload files, or paste a YouTube URL to get started!' }
   ]);
@@ -133,21 +135,19 @@ function Chat() {
             parts: [{ text: msg.content }]
           }));
 
-        // NEW: Use RAG-enabled endpoint if we have a note
-        const endpoint = currentNoteId ? '/api/chat/context' : '/api/chat';
-        const payload = currentNoteId ? {
+        // ALWAYS use RAG-enabled endpoint to search user's notes and Drive files
+        const endpoint = '/api/chat/context';
+        const payload = {
           message: userMessage,
-          noteId: currentNoteId,  // Enable RAG!
-          userId: user._id,
-          history: conversationHistory
-        } : {
-          message: userMessage,
+          userId: user._id,  // Always pass userId to enable RAG across all user's content
+          noteId: currentNoteId || null,  // Optional: filter to specific note if set
           history: conversationHistory
         };
 
         console.log('=== RAG Debug Info ===');
         console.log('Endpoint:', endpoint);
         console.log('Current noteId:', currentNoteId);
+        console.log('UserId:', user._id);
         console.log('Payload:', JSON.stringify(payload, null, 2));
         console.log('=====================');
         
@@ -211,6 +211,16 @@ function Chat() {
   const handleFileUpload = async (file) => {
     if (!file || !user) {
       setError('Please select a file to upload');
+      return;
+    }
+
+    // Check file size (5MB limit)
+    const maxSize = 5 * 1024 * 1024; // 5MB in bytes
+    if (file.size > maxSize) {
+      setMessages(prev => [...prev, { 
+        role: 'assistant', 
+        content: `❌ File too large: ${file.name} (${(file.size / 1024 / 1024).toFixed(2)} MB)\n\nThe maximum file size is 5MB. Please upload a smaller file.`
+      }]);
       return;
     }
 
@@ -278,9 +288,18 @@ function Chat() {
 
     } catch (err) {
       console.error('Upload error:', err);
+      
+      // Handle file size error specifically
+      let errorMessage = err.message || 'Upload failed';
+      if (err.response?.data?.error === 'File too large' || err.response?.data?.message?.includes('5MB')) {
+        errorMessage = `File too large! The maximum file size is 5MB. Your file is ${(file.size / 1024 / 1024).toFixed(2)} MB. Please upload a smaller file.`;
+      } else if (err.response?.data?.message) {
+        errorMessage = err.response.data.message;
+      }
+      
       setMessages(prev => [...prev, { 
         role: 'assistant', 
-        content: `Sorry, I couldn't process your file: ${err.message || 'Upload failed'}` 
+        content: `Sorry, I couldn't process your file: ${errorMessage}` 
       }]);
     } finally {
       setUploading(false);
@@ -503,12 +522,8 @@ function Chat() {
                     type="button"
                     className="upload-option"
                     onClick={() => {
-                      // TODO: Implement Google Drive integration
                       setShowUploadMenu(false);
-                      setMessages(prev => [...prev, { 
-                        role: 'assistant', 
-                        content: 'Google Drive integration coming soon! For now, please use the file upload option.' 
-                      }]);
+                      navigate('/drive');
                     }}
                   >
                     <span className="option-icon">🔗</span>

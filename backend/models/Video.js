@@ -117,6 +117,10 @@ videoSchema.index({ tags: 1 });
 videoSchema.index({ isPublic: 1 });
 videoSchema.index({ 'notes.timestamp': 1 });
 
+// TTL index: Automatically delete videos after 7 days (604800 seconds)
+// MongoDB will delete documents where createdAt is older than 7 days
+videoSchema.index({ createdAt: 1 }, { expireAfterSeconds: 604800 });
+
 const Video = mongoose.model('Video', videoSchema);
 
 module.exports = Video;

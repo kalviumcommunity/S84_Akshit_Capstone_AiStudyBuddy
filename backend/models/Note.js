@@ -54,6 +54,10 @@ noteSchema.index({ tags: 1 });
 noteSchema.index({ isPublic: 1 });
 noteSchema.index({ fileType: 1 });
 
+// TTL index: Automatically delete notes after 7 days (604800 seconds)
+// MongoDB will delete documents where createdAt is older than 7 days
+noteSchema.index({ createdAt: 1 }, { expireAfterSeconds: 604800 });
+
 const Note = mongoose.model('Note', noteSchema);
 
 module.exports = Note;
